@@ -1,7 +1,9 @@
 package com.datastax.oss.cass_stac.internal;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.locationtech.jts.geom.*;
 
 import java.util.Arrays;
@@ -9,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
 
 public class GeoPartitionTest {
     private GeoPartition geoPartition;
@@ -19,7 +20,7 @@ public class GeoPartitionTest {
         return geometryFactory.createPolygon(coordinates);
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         geoPartition = new GeoPartition();
         geometryFactory = new GeometryFactory();
