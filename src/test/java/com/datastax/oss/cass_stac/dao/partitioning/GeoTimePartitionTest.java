@@ -1,4 +1,4 @@
-package com.datastax.oss.cass_stac.internal;
+package com.datastax.oss.cass_stac.dao.partitioning;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.datastax.oss.cass_stac.internal;
+package com.datastax.oss.cass_stac.dao.partitioning;
 
 import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.*;

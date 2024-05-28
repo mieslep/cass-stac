@@ -1,4 +1,4 @@
-package com.datastax.oss.cass_stac.internal;
+package com.datastax.oss.cass_stac.dao.partitioning;
 
 import com.uber.h3core.H3Core;
 import com.uber.h3core.util.LatLng;
