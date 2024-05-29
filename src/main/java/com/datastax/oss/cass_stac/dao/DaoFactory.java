@@ -6,6 +6,8 @@ import com.datastax.oss.cass_stac.dao.partitioning.GeoTimePartition;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 
+import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
+import com.datastax.oss.driver.api.core.type.codec.registry.MutableCodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,7 @@ public class DaoFactory {
         return instance;
     }
 
-    public <T> IDao<T> getDao(DaoType daoType) {
+    public <T> IDao<T> getDao(DaoType daoType) throws ConfigException {
         return switch (daoType) {
             case ITEM -> (IDao<T>) new ItemDao(this.session, this.partitioner);
         };
@@ -57,7 +59,7 @@ public class DaoFactory {
         this.partitioner = new GeoTimePartition(geoResolution, timeResolution);
     }
 
-    private void initializeDaos() {
+    private void initializeDaos() throws ConfigException {
         for (DaoType daoType : DaoType.values()) {
             IDao dao = getDao(daoType);
             dao.initialize();
@@ -107,6 +109,13 @@ public class DaoFactory {
 
         this.session = builder.build();
         logger.info("Cassandra connection established");
+
+        MutableCodecRegistry registry =
+                (MutableCodecRegistry) session.getContext().getCodecRegistry();
+        registry.register(new TIMESTAMP_OffsetDateTimeCodec());
+        logger.info("Cassandra codecs registered");
+
+
     }
 
     private void shutdown() {

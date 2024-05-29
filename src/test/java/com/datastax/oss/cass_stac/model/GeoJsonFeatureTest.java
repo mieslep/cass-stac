@@ -1,5 +1,6 @@
 package com.datastax.oss.cass_stac.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.bedatadriven.jackson.datatype.jts.JtsModule;
@@ -30,13 +31,15 @@ class GeoJsonFeatureTest {
     @Test
     void testSerialization() throws Exception {
         GeoJsonFeature feature = new GeoJsonFeature();
-        feature.setGeometry(geometryFactory.createPolygon(new Coordinate[]{
+        Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(0, 0),
                 new Coordinate(1, 0),
                 new Coordinate(1, 1),
                 new Coordinate(0, 1),
                 new Coordinate(0, 0)
-        }));
+        });
+        JsonNode geometryJson = objectMapper.valueToTree(polygon);
+        feature.setGeometry(geometryJson);
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("name", "Test Area");

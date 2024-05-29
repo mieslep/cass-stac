@@ -73,11 +73,13 @@ class ItemTest {
         Item item = objectMapper.readValue(json, Item.class);
         assertNotNull(item);
         assertEquals("20201211_223832_CS2", item.getId());
-        assertNotNull(item.getBbox());
-        assertEquals(4, item.getBbox().size());
         assertInstanceOf(Polygon.class, item.getGeometry());
         assertEquals("2020-12-11T22:38:32.125Z", item.getProperties().get("datetime").toString());
         assertEquals("simple-collection", item.getCollection());
+
+        JsonNode itemJsonNode = item.toJson();
+        JsonNode expectedJsonNode = objectMapper.readTree(json);
+        assertEquals(expectedJsonNode, itemJsonNode, "The serialized JSON should match the expected JSON.");
     }
 
     @Test
@@ -124,7 +126,6 @@ class ItemTest {
                   "properties": {
                     "title": "Core Item",
                     "description": "A sample STAC Item that includes examples of all common metadata",
-                    "datetime": null,
                     "start_datetime": "2020-12-11T22:38:32.125Z",
                     "end_datetime": "2020-12-11T22:38:32.327Z",
                     "created": "2020-12-12T01:48:13.725Z",
@@ -217,20 +218,14 @@ class ItemTest {
         Item item = objectMapper.readValue(json, Item.class);
         assertNotNull(item);
         assertEquals("20201211_223832_CS2", item.getId());
-        assertNotNull(item.getBbox());
-        assertEquals(4, item.getBbox().size());
         assertInstanceOf(Polygon.class, item.getGeometry());
         assertNull(item.getProperties().get("datetime"));
         assertEquals(OffsetDateTime.parse("2020-12-11T22:38:32.125Z"), item.getProperties().get("start_datetime"));
         assertEquals(OffsetDateTime.parse("2020-12-11T22:38:32.327Z"), item.getProperties().get("end_datetime"));
         assertEquals("simple-collection", item.getCollection());
 
-        JsonNode expectedLinks = objectMapper.readTree(jsonLinks);
-        JsonNode actualLinks = objectMapper.readTree(item.getLinks().toString());
-        assertEquals(expectedLinks, actualLinks);
-
-        JsonNode expectedAssets = objectMapper.readTree(jsonAssets);
-        JsonNode actualAssets = objectMapper.readTree(item.getAssets().toString());
-        assertEquals(expectedAssets, actualAssets);
+        JsonNode itemJsonNode = item.toJson();
+        JsonNode expectedJsonNode = objectMapper.readTree(json);
+        assertEquals(expectedJsonNode, itemJsonNode, "The serialized JSON should match the expected JSON.");
     }
 }

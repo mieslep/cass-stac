@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
 
 public class ConfigManager {
@@ -65,6 +66,18 @@ public class ConfigManager {
 
     public String getProperty(String key) {
         return getProperty(key, null);
+    }
+
+    public List<String> getPropertyAsList(String key, String defaultValue) {
+        String value = getProperty(key,defaultValue);
+        if (null==value)
+            return List.of();
+        else
+            return List.of(value.split(","));
+    }
+
+    public List<String> getPropertyAsList(String key) {
+        return getPropertyAsList(key, null);
     }
 
     public int getIntProperty(String key, int defaultValue) {

@@ -16,7 +16,6 @@ public class GeoTimePartition extends GeoPartition {
     }
 
     public static final TimeResolution DEFAULT_TIME_RESOLUTION = TimeResolution.MONTH;
-    private static final ZoneId BASE_TIME_ZONE = ZoneId.of("UTC");
 
     private final TimeResolution timeResolution;
 
@@ -37,13 +36,13 @@ public class GeoTimePartition extends GeoPartition {
         this(DEFAULT_RESOLUTION, DEFAULT_TIME_RESOLUTION);
     }
 
-    public String getGeoTimePartitionForPoint(@NotNull Point point, @NotNull ZonedDateTime dateTime) {
+    public String getGeoTimePartitionForPoint(@NotNull Point point, @NotNull OffsetDateTime dateTime) {
         String spatialIndex = getGeoPartitionForPoint(point);
-        String temporalIndex = getTimePartition(dateTime);
+        String temporalIndex = getTimePartition(dateTime.toLocalDate());
         return spatialIndex + "-" + temporalIndex;
     }
 
-    public Stream<String> streamGeoTimePartitions(@NotNull Polygon polygon, @NotNull ZonedDateTime minDateTime, @NotNull ZonedDateTime maxDateTime) {
+    public Stream<String> streamGeoTimePartitions(@NotNull Polygon polygon, @NotNull OffsetDateTime minDateTime, @NotNull OffsetDateTime maxDateTime) {
         Stream<String> spatialIndexes = streamGeoPartitions(polygon);
         List<String> timePartitions = getDateRange(minDateTime, maxDateTime)
                 .map(this::getTimePartition)
@@ -54,17 +53,17 @@ public class GeoTimePartition extends GeoPartition {
                 .map(timePartition -> spatialIndex + "-" + timePartition));
     }
 
-    public List<String> getGeoTimePartitions(@NotNull Polygon polygon, @NotNull ZonedDateTime minDateTime, @NotNull ZonedDateTime maxDateTime) {
+    public List<String> getGeoTimePartitions(@NotNull Polygon polygon, @NotNull OffsetDateTime minDateTime, @NotNull OffsetDateTime maxDateTime) {
         return streamGeoTimePartitions(polygon, minDateTime, maxDateTime)
                 .collect(Collectors.toList());
     }
 
-    private Stream<LocalDate> getDateRange(ZonedDateTime startDateTime, ZonedDateTime endDateTime) {
-        LocalDate baseStartDate = startDateTime.withZoneSameInstant(BASE_TIME_ZONE).toLocalDate();
-        LocalDate baseEndDate = endDateTime.withZoneSameInstant(BASE_TIME_ZONE).toLocalDate();
-        long daysBetween = ChronoUnit.DAYS.between(baseStartDate, baseEndDate);
+    private Stream<LocalDate> getDateRange(OffsetDateTime startDateTime, OffsetDateTime endDateTime) {
+        LocalDate startDate = startDateTime.toLocalDate();
+        LocalDate endDate = endDateTime.toLocalDate();
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
         return IntStream.rangeClosed(0, (int) daysBetween)
-                .mapToObj(baseStartDate::plusDays);
+                .mapToObj(startDate::plusDays);
     }
 
     private String getTimePartition(LocalDate date) {
@@ -93,10 +92,5 @@ public class GeoTimePartition extends GeoPartition {
             }
             case YEAR -> String.format("%d", year);
         };
-    }
-
-    private String getTimePartition(ZonedDateTime dateTime) {
-        ZonedDateTime baseDateTime = dateTime.withZoneSameInstant(BASE_TIME_ZONE);
-        return getTimePartition(baseDateTime.toLocalDate());
     }
 }

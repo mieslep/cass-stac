@@ -5,8 +5,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.locationtech.jts.geom.*;
-import java.time.ZonedDateTime;
-import java.time.ZoneId;
+
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +43,7 @@ public class GeoTimePartitionTest {
     public void test_GetGeoTimePartitionForPoint() {
         Point p = sfTriangle.getCentroid();
         String pointPartition = "86283082fffffff";
-        ZonedDateTime dateTime = ZonedDateTime.of(2024, 3, 17, 18, 21, 33, 0, ZoneId.of("UTC"));
+        OffsetDateTime dateTime = OffsetDateTime.of(2024, 3, 17, 18, 21, 33, 0, ZoneOffset.UTC);
 
         assertAll("GeoTimePartitions",
                 () -> assertEquals(pointPartition+"-2024", new GeoTimePartition(GeoTimePartition.TimeResolution.YEAR).getGeoTimePartitionForPoint(p, dateTime), "Year Partition"),
@@ -56,8 +57,8 @@ public class GeoTimePartitionTest {
 
     @Test
     public void test_GetGeoTimePartitions() {
-        ZonedDateTime startDateTime = ZonedDateTime.of(2024, 1, 15, 23, 59, 59, 0, ZoneId.of("UTC"));
-        ZonedDateTime endDateTime = ZonedDateTime.of(2024, 2, 15, 0, 0, 0, 0, ZoneId.of("UTC"));
+        OffsetDateTime startDateTime = OffsetDateTime.of(2024, 1, 15, 23, 59, 59, 0, ZoneOffset.UTC);
+        OffsetDateTime endDateTime = OffsetDateTime.of(2024, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC);
 
         List<String> timePartitions = Arrays.asList("2024-M01", "2024-M02");
         Set<String> expectedPartitions = sfTriangleGeoPartitions.stream()
