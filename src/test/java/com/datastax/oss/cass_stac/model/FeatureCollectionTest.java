@@ -44,9 +44,9 @@ class FeatureCollectionTest {
         FeatureCollection featureCollection = objectMapper.readValue(json, FeatureCollection.class);
         assertNotNull(featureCollection);
         assertEquals("20230122_095631_SN29_QUICKVIEW_VISUAL_1_1_10_SATL-2KM-39N_554_2776", featureCollection.getItemId());
-        assertEquals("mmsegmentation-loveda-b segmentations", featureCollection.getName());
-        assertEquals("FeatureCollection", featureCollection.getType());
-        assertNotNull(featureCollection.getCrs());
+        assertEquals("mmsegmentation-loveda-b segmentations", featureCollection.getAttribute("name"));
+        assertEquals("FeatureCollection", featureCollection.getAttribute("type"));
+        assertNotNull(featureCollection.getAttribute("crs"));
         assertNotNull(featureCollection.getProperties());
         assertEquals(0, featureCollection.getFeatures().size());
     }
@@ -101,9 +101,9 @@ class FeatureCollectionTest {
         FeatureCollection featureCollection = objectMapper.readValue(json, FeatureCollection.class);
         assertNotNull(featureCollection);
         assertEquals("20230122_095631_SN29_QUICKVIEW_VISUAL_1_1_10_SATL-2KM-39N_554_2776", featureCollection.getItemId());
-        assertNull(featureCollection.getName());
-        assertEquals("FeatureCollection", featureCollection.getType());
-        assertNull(featureCollection.getCrs());
+        assertNull(featureCollection.getAttribute("name"));
+        assertEquals("FeatureCollection", featureCollection.getAttribute("type"));
+        assertNull(featureCollection.getAttribute("crs"));
         assertNull(featureCollection.getProperties());
         assertEquals(2, featureCollection.getFeatures().size());
 
@@ -111,12 +111,12 @@ class FeatureCollectionTest {
         GeoJsonFeature feature1 = featureCollection.getFeatures().get(0);
         assertNotNull(feature1);
         assertInstanceOf(Polygon.class, feature1.getGeometry());
-        assertEquals("Test Feature 1", feature1.getProperties().get("name"));
+        assertEquals("Test Feature 1", feature1.getProperty("name"));
 
         // Check the second feature
         GeoJsonFeature feature2 = featureCollection.getFeatures().get(1);
         assertNotNull(feature2);
         assertInstanceOf(Polygon.class, feature2.getGeometry());
-        assertEquals("Test Feature 2", feature2.getProperties().get("name"));
+        assertEquals("Test Feature 2", feature2.getProperty("name"));
     }
 }
