@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.locationtech.jts.geom.Geometry;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,13 +25,26 @@ public class Item extends GeoJsonFeature {
     @JsonProperty("properties")
     private JsonNode propertiesJson;
     private Map<String, Object> properties;  // Lazy-loaded properties map, converted using custom deserializer
-    private final Set<String> propertiesDateFields;
+    private Set<String> propertiesDateFields;
 
     @JsonAnySetter
     private Map<String, JsonNode> additionalAttributes = new HashMap<>();
 
     public Item() {
         super();
+        constructorInit();
+    }
+
+    public Item(String id, String collection, Geometry geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
+        super(geometry);
+        constructorInit();
+        setId(id);
+        setCollection(collection);
+        setPropertiesJsonString(propertiesString);
+        setAdditionalAttributes(additionalAttributes);
+    }
+
+    private void constructorInit() {
         ConfigManager configManager = ConfigManager.getInstance();
         propertiesDateFields = new HashSet<>(configManager.getPropertyAsList("dao.item.property.DateFields","datetime,start_datetime,end_datetime,created,updated"));
     }
@@ -54,6 +68,11 @@ public class Item extends GeoJsonFeature {
     public void setPropertiesJson(JsonNode propertiesJson) throws JsonProcessingException {
         this.propertiesJson = propertiesJson;
         this.properties = null;
+    }
+
+    public void setPropertiesJsonString(String propertiesString) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(propertiesString);
+        setPropertiesJson(jsonNode);
     }
 
     public Map<String, Object> getProperties() {
@@ -125,6 +144,23 @@ public class Item extends GeoJsonFeature {
             // Return the JsonNode itself for non-basic types or as a fallback
             return node;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) return false;
+        if (this == o) return true;
+        if (getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return Objects.equals(id, item.id) &&
+                Objects.equals(collection, item.collection) &&
+                Objects.equals(propertiesJson, item.propertiesJson) &&
+                Objects.equals(additionalAttributes, item.additionalAttributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, collection, propertiesJson, additionalAttributes);
     }
 
 }

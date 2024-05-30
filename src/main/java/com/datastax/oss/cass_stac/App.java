@@ -1,6 +1,8 @@
 package com.datastax.oss.cass_stac;
 
 import com.datastax.oss.cass_stac.dao.DaoFactory;
+import com.datastax.oss.cass_stac.dao.IDao;
+import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.model.Item;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -14,10 +16,19 @@ public class App {
         logger.info("Hello World!");
 
         logger.info("Saving Item...");
+        ItemDao itemDao = df.getDao(DaoFactory.DaoType.ITEM);
         ObjectMapper objectMapper = new ObjectMapper();
         Item item = objectMapper.readValue(sampleJson(), Item.class);
-        df.getDao(DaoFactory.DaoType.ITEM).save(item);
+        itemDao.save(item);
         logger.info("Done saving Item.");
+
+        logger.info("Retrieving Item...");
+        Item dbItem = itemDao.get("867ee240fffffff-2020-M12", "20201211_223832_CS2");
+        if (item.equals(dbItem))
+            logger.info("Items match!");
+        else
+            logger.error("Items do not match!");
+        logger.info("Done retrieving Item...");
 
         System.exit(0);
     }

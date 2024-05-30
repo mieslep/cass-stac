@@ -5,9 +5,8 @@ import com.datastax.oss.cass_stac.config.ConfigManager;
 import com.datastax.oss.cass_stac.dao.partitioning.GeoTimePartition;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
-
-import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.datastax.oss.driver.api.core.type.codec.registry.MutableCodecRegistry;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,14 +20,10 @@ import java.util.Collection;
 
 public class DaoFactory {
     private static final Logger logger = LoggerFactory.getLogger(DaoFactory.class);
-
-    public enum DaoType {ITEM}
-
     private static DaoFactory instance;
-    private CqlSession session;
     private final ConfigManager configManager;
+    private CqlSession session;
     private GeoTimePartition partitioner;
-
     private DaoFactory() throws ConfigException {
         this.configManager = ConfigManager.getInstance();
         this.initializePartitioner();
@@ -47,9 +42,9 @@ public class DaoFactory {
         return instance;
     }
 
-    public <T> IDao<T> getDao(DaoType daoType) throws ConfigException {
+    public <T extends IDao<?>> T getDao(@NotNull DaoType daoType) throws ConfigException {
         return switch (daoType) {
-            case ITEM -> (IDao<T>) new ItemDao(this.session, this.partitioner);
+            case ITEM -> (T) new ItemDao(this.session, this.partitioner);
         };
     }
 
@@ -71,26 +66,23 @@ public class DaoFactory {
 
         String scb = configManager.getProperty("cassandra.secureBundlePath");
         if (null != scb) {
-            logger.info("Configuring connection with SCB "+scb);
+            logger.info("Configuring connection with SCB " + scb);
             try {
                 builder.withCloudSecureConnectBundle(Paths.get(scb));
-            }
-            catch (InvalidPathException pe) {
+            } catch (InvalidPathException pe) {
                 try {
                     builder.withCloudSecureConnectBundle(new URL(scb));
-                }
-                catch (MalformedURLException ue) {
-                    throw new ConfigException("cassandra.secureBundlePath is set but appears to be invalid: "+scb);
+                } catch (MalformedURLException ue) {
+                    throw new ConfigException("cassandra.secureBundlePath is set but appears to be invalid: " + scb);
                 }
             }
 
             String username = configManager.getProperty("cassandra.username", "token");
             String password = configManager.getProperty("cassandra.password");
             builder.withAuthCredentials(username, password);
-        }
-        else {
+        } else {
             String contactPointsProperty = configManager.getProperty("cassandra.contactPoints", "localhost");
-            logger.info("Configuring connection with contactPoints "+contactPointsProperty);
+            logger.info("Configuring connection with contactPoints " + contactPointsProperty);
             String[] contactPointStrings = contactPointsProperty.split(",");
             int port = configManager.getIntProperty("cassandra.port", 9042);
             Collection<InetSocketAddress> contactPoints = new ArrayList<>();
@@ -124,4 +116,6 @@ public class DaoFactory {
         }
         logger.info("DaoFactory shutdown complete.");
     }
+
+    public enum DaoType {ITEM}
 }

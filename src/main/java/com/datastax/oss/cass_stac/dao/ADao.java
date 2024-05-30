@@ -21,5 +21,5 @@ public abstract class ADao<T> implements IDao<T> {
     public abstract void save(T object) throws DaoException;
 
     @Override
-    public abstract T get(Object id);
+    public abstract T get(String partitionId, Object id) throws DaoException;
 }
