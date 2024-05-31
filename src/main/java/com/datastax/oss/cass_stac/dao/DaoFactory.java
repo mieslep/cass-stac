@@ -45,12 +45,14 @@ public class DaoFactory {
     public <T extends IDao<?>> T getDao(@NotNull DaoType daoType) throws ConfigException {
         return switch (daoType) {
             case ITEM -> (T) new ItemDao(this.session, this.partitioner);
+            case FEATURE -> (T) new FeatureDao(this.session, this.partitioner);
+            case FEATURE_COLLECTION -> (T) new FeatureCollectionDao(this.session, this.partitioner);
         };
     }
 
     private void initializePartitioner() {
-        int geoResolution = configManager.getIntProperty("database.partition_resolution.geo", 6);
-        GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf(configManager.getProperty("database.partition_resolution.time", "MONTH"));
+        int geoResolution = configManager.getIntProperty("database.partition.resolution.geo", 6);
+        GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf(configManager.getProperty("database.partition.resolution.time", "MONTH"));
         this.partitioner = new GeoTimePartition(geoResolution, timeResolution);
     }
 
@@ -117,5 +119,5 @@ public class DaoFactory {
         logger.info("DaoFactory shutdown complete.");
     }
 
-    public enum DaoType {ITEM}
+    public enum DaoType {ITEM, FEATURE, FEATURE_COLLECTION}
 }

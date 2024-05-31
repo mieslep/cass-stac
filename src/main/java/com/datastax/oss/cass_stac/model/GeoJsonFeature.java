@@ -6,12 +6,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.WKBReader;
-import org.locationtech.jts.io.WKBWriter;
 import org.n52.jackson.datatype.jts.JtsModule;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Objects;
 
@@ -44,29 +40,8 @@ public class GeoJsonFeature extends PropertyObject {
         setProperties(properties);
     }
 
-    public GeoJsonFeature(ByteBuffer geometryByteBuffer, Map<String, Object> properties) {
-        this(fromGeometryByteBuffer(geometryByteBuffer), properties);
-    }
-
     public GeoJsonFeature(Geometry geometry) {
         this(geometry, null);
-    }
-
-    public GeoJsonFeature(ByteBuffer geometryByteBuffer) {
-        this(fromGeometryByteBuffer(geometryByteBuffer));
-    }
-
-    public static Geometry fromGeometryByteBuffer(ByteBuffer byteBuffer) {
-        if (byteBuffer == null) {
-            return null;
-        }
-        try {
-            byte[] bytes = new byte[byteBuffer.remaining()];
-            byteBuffer.duplicate().get(bytes);
-            return new WKBReader().read(bytes);
-        } catch (ParseException e) {
-            throw new RuntimeException("Failed to parse geometry from ByteBuffer", e);
-        }
     }
 
     public String getType() {
@@ -87,14 +62,6 @@ public class GeoJsonFeature extends PropertyObject {
 
     protected void setGeometry(JsonNode geometryJson) throws JsonProcessingException {
         this.geometry = geometryJson == null ? null : objectMapper.treeToValue(geometryJson, Geometry.class);
-    }
-
-    public ByteBuffer getGeometryByteBuffer() {
-        if (geometry == null) {
-            return ByteBuffer.allocate(0);
-        }
-        byte[] bytes = new WKBWriter().write(geometry);
-        return ByteBuffer.wrap(bytes);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.datastax.oss.cass_stac.config;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,8 +12,8 @@ import java.util.Properties;
 
 public class ConfigManager {
     private static ConfigManager instance;
-    private Properties defaultProperties;
-    private Properties overrideProperties;
+    private final Properties defaultProperties;
+    private final Properties overrideProperties;
 
     private ConfigManager() {
         defaultProperties = new Properties();
@@ -47,7 +49,7 @@ public class ConfigManager {
         }
     }
 
-    public String getProperty(String key, String defaultValue) {
+    public String getProperty(@NotNull String key, String defaultValue) {
         // First, check environment variables
         String value = System.getenv(key.replace('.', '_').toUpperCase());
 
@@ -70,7 +72,7 @@ public class ConfigManager {
 
     public List<String> getPropertyAsList(String key, String defaultValue) {
         String value = getProperty(key,defaultValue);
-        if (null==value)
+        if (null==value || value.isEmpty())
             return List.of();
         else
             return List.of(value.split(","));
@@ -82,11 +84,11 @@ public class ConfigManager {
 
     public int getIntProperty(String key, int defaultValue) {
         String value = getProperty(key);
-        return value != null ? Integer.parseInt(value) : defaultValue;
+        return (value == null || value.isEmpty()) ? defaultValue : Integer.parseInt(value);
     }
 
     public boolean getBooleanProperty(String key, boolean defaultValue) {
         String value = getProperty(key);
-        return value != null ? Boolean.parseBoolean(value) : defaultValue;
+        return (value == null || value.isEmpty()) ? defaultValue : Boolean.parseBoolean(value);
     }
 }

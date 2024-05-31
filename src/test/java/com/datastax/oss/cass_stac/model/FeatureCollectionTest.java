@@ -20,7 +20,6 @@ class FeatureCollectionTest {
     void testFeatureCollectionDeserialization() throws Exception {
         String json = """
                 {
-                    "item_id": "20230122_095631_SN29_QUICKVIEW_VISUAL_1_1_10_SATL-2KM-39N_554_2776",
                     "name": "mmsegmentation-loveda-b segmentations",
                     "type": "FeatureCollection",
                     "crs": {
@@ -30,6 +29,7 @@ class FeatureCollectionTest {
                         }
                     },
                     "properties": {
+                        "item_id": "20230122_095631_SN29_QUICKVIEW_VISUAL_1_1_10_SATL-2KM-39N_554_2776",
                         "model": {
                             "id": "mmsegmentation-loveda-b",
                             "params": {
@@ -55,8 +55,10 @@ class FeatureCollectionTest {
     void testFeatureCollectionWithFeaturesDeserialization() throws Exception {
         String json = """
                 {
-                    "item_id": "20230122_095631_SN29_QUICKVIEW_VISUAL_1_1_10_SATL-2KM-39N_554_2776",
                     "type": "FeatureCollection",
+                    "properties": {
+                        "item_id": "20230122_095631_SN29_QUICKVIEW_VISUAL_1_1_10_SATL-2KM-39N_554_2776"
+                        },
                     "features": [
                         {
                             "type": "Feature",
@@ -104,7 +106,7 @@ class FeatureCollectionTest {
         assertNull(featureCollection.getAttribute("name"));
         assertEquals("FeatureCollection", featureCollection.getAttribute("type"));
         assertNull(featureCollection.getAttribute("crs"));
-        assertNull(featureCollection.getProperties());
+        assertNotNull(featureCollection.getProperties());
         assertEquals(2, featureCollection.getFeatures().size());
 
         // Check the first feature

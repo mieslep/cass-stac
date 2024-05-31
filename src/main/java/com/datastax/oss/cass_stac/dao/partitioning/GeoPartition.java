@@ -1,5 +1,6 @@
 package com.datastax.oss.cass_stac.dao.partitioning;
 
+import com.datastax.oss.cass_stac.config.ConfigManager;
 import com.uber.h3core.H3Core;
 import com.uber.h3core.util.LatLng;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +19,7 @@ public class GeoPartition {
     public static final int DEFAULT_RESOLUTION = 6;
     private final int resolution;
     private final GeometryFactory geometryFactory;
+    private final int idBucketCount;
     private H3Core h3;
 
     public GeoPartition(int resolution) {
@@ -25,6 +27,7 @@ public class GeoPartition {
             throw new IllegalArgumentException("Invalid resolution, must be integer from "+MIN_RESOLUTION+" to "+MAX_RESOLUTION+" (inclusive)");
         }
         this.resolution = resolution;
+        this.idBucketCount = ConfigManager.getInstance().getIntProperty("database.partition.id_bucket_count", 1000000);
         this.geometryFactory = new GeometryFactory();
         try {
             this.h3 = H3Core.newInstance();
@@ -54,6 +57,10 @@ public class GeoPartition {
     public List<Polygon> getGeoPartitionPolygons(@NotNull Polygon polygon) {
         List<Long> partitionList = getInternalPartitions(polygon);
         return asPolygons(partitionList);
+    }
+
+    public int bucketForId(String id) {
+        return Math.abs(id.hashCode()) % this.idBucketCount;
     }
 
     private List<Long> getInternalPartitions(@NotNull Polygon polygon) {

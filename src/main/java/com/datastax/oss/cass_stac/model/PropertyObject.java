@@ -67,6 +67,11 @@ public class PropertyObject {
         return (T) getProperties().get(property);
     }
 
+    public <T> T getProperty(String property, T defaultValue) {
+        T propVal = (T) getProperties().get(property);
+        return (null==propVal) ? defaultValue : propVal;
+    }
+
     @JsonAnySetter
     public void setAdditionalAttributes(String key, JsonNode value) {
         additionalAttributes.put(key, value);
