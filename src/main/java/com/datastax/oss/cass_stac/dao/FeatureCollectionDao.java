@@ -47,7 +47,7 @@ public class FeatureCollectionDao extends ADao<FeatureCollection> {
         try {
             String itemId = featureCollection.getItemId();
             ItemDao itemDao = DaoFactory.getInstance().getDao(DaoFactory.DaoType.ITEM);
-            Pair<String, OffsetDateTime> ids = itemDao.getIds(itemId);
+            Pair<String, OffsetDateTime> ids = itemDao.getPartitionAndDatetime(itemId);
             if (null == ids) {
                 throw new DaoException("Item id " + itemId + " not found by itemDao");
             }

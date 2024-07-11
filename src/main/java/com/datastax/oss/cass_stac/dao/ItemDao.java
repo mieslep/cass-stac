@@ -174,7 +174,34 @@ public class ItemDao extends ADao<Item> {
         return null;
     }
 
-    public Pair<String, OffsetDateTime> getIds(String id) throws DaoException {
+    public Item get(String id) throws DaoException {
+        try {
+            Pair<String, OffsetDateTime> partitionDatetime = this.getPartitionAndDatetime(id);
+            String partitionId = partitionDatetime.getLeft();
+
+            PreparedStatement pstmt = session.prepare(getQuery);
+            BoundStatement boundStmt = pstmt.bind(partitionId, id);
+
+            ResultSet rs = session.execute(boundStmt);
+            Row row = rs.one();
+
+            if (row != null) {
+                String collection = row.getString("collection");
+                ByteBuffer geometryByteBuffer = row.getByteBuffer("geometry");
+                Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
+                String propertiesString = row.getString("properties");
+                String additionalAttributesString = row.getString("additional_attributes");
+
+                return new Item((String) id, collection, geometry, propertiesString, additionalAttributesString);
+            }
+        } catch (Exception e) {
+            throw new DaoException("Problem fetching item", e);
+        }
+
+        return null;
+    }
+    
+    public Pair<String, OffsetDateTime> getPartitionAndDatetime(String id) throws DaoException {
         try {
 
             PreparedStatement pstmt = session.prepare(getIdsQuery);
