@@ -2,7 +2,6 @@ package com.datastax.oss.cass_stac.model;
 
 import com.datastax.oss.cass_stac.config.ConfigException;
 import com.datastax.oss.cass_stac.config.ConfigManager;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -10,10 +9,12 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FeatureCollection extends PropertyObject {
+
     @JsonProperty("features")
     private List<GeoJsonFeature> features;
 
-    @JsonIgnore
+    // @JsonIgnore
+    @JsonProperty("item_id")
     private String itemId;
 
     private static final String ITEM_ID_KEY_NAME = "dao.featureCollection.property.itemIdName";
