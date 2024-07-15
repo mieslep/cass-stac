@@ -24,6 +24,12 @@ public class DaoFactory {
     private final ConfigManager configManager;
     private CqlSession session;
     private GeoTimePartition partitioner;
+
+    private static final String DEFAULT_ASTRA_BUNDLE_USERNAME = "token";
+    private static final String DEFAULT_ASTRA_KS_NAME = "stac";
+    private static final String DEFAULT_CASSANDRA_USERNAME = "cassandra";
+    private static final String DEFAULT_CASSANDRA_PASSWORD = "cassandra";
+
     private DaoFactory() throws ConfigException {
         this.configManager = ConfigManager.getInstance();
         this.initializePartitioner();
@@ -65,51 +71,57 @@ public class DaoFactory {
 
     private void initializeSession() throws ConfigException {
         CqlSessionBuilder builder = CqlSession.builder();
-
         String scb = configManager.getProperty("cassandra.secureBundlePath");
+
         if (null != scb) {
-            logger.info("Configuring connection with SCB " + scb);
-            try {
-                builder.withCloudSecureConnectBundle(Paths.get(scb));
-            } catch (InvalidPathException pe) {
-                try {
-                    builder.withCloudSecureConnectBundle(new URL(scb));
-                } catch (MalformedURLException ue) {
-                    throw new ConfigException("cassandra.secureBundlePath is set but appears to be invalid: " + scb);
-                }
-            }
-
-            String username = configManager.getProperty("cassandra.username", "token");
-            String password = configManager.getProperty("cassandra.password");
-            builder.withAuthCredentials(username, password);
+            initializeSessionWithBundle(builder, scb);
         } else {
-            String contactPointsProperty = configManager.getProperty("cassandra.contactPoints", "localhost");
-            logger.info("Configuring connection with contactPoints " + contactPointsProperty);
-            String[] contactPointStrings = contactPointsProperty.split(",");
-            int port = configManager.getIntProperty("cassandra.port", 9042);
-            Collection<InetSocketAddress> contactPoints = new ArrayList<>();
-            for (String contactPoint : contactPointStrings) {
-                contactPoints.add(new InetSocketAddress(contactPoint.trim(), port));
-            }
-            builder.addContactPoints(contactPoints);
-
-            String username = configManager.getProperty("cassandra.username", "cassandra");
-            String password = configManager.getProperty("cassandra.password", "cassandra");
-            builder.withAuthCredentials(username, password);
+            initializeSession(builder);
         }
 
-        String keyspace = configManager.getProperty("cassandra.keyspace", "stac");
+        String keyspace = configManager.getProperty("cassandra.keyspace", DEFAULT_ASTRA_KS_NAME);
         builder.withKeyspace(keyspace);
 
         this.session = builder.build();
         logger.info("Cassandra connection established");
 
-        MutableCodecRegistry registry =
-                (MutableCodecRegistry) session.getContext().getCodecRegistry();
+        MutableCodecRegistry registry = (MutableCodecRegistry) session.getContext().getCodecRegistry();
         registry.register(new TIMESTAMP_OffsetDateTimeCodec());
         logger.info("Cassandra codecs registered");
+    }
 
+    private void initializeSession(CqlSessionBuilder builder) {
+        String contactPointsProperty = configManager.getProperty("cassandra.contactPoints", "localhost");
+        logger.info("Configuring connection with contactPoints " + contactPointsProperty);
+        String[] contactPointStrings = contactPointsProperty.split(",");
+        int port = configManager.getIntProperty("cassandra.port", 9042);
+        Collection<InetSocketAddress> contactPoints = new ArrayList<>();
+        for (String contactPoint : contactPointStrings) {
+            contactPoints.add(new InetSocketAddress(contactPoint.trim(), port));
+        }
 
+        builder.addContactPoints(contactPoints);
+        builder.withLocalDatacenter(configManager.getProperty("cassandra.dc", ""));
+        String username = configManager.getProperty("cassandra.username", DEFAULT_CASSANDRA_USERNAME);
+        String password = configManager.getProperty("cassandra.password", DEFAULT_CASSANDRA_PASSWORD);
+        builder.withAuthCredentials(username, password);
+    }
+
+    private void initializeSessionWithBundle(CqlSessionBuilder builder, String scb) throws ConfigException {
+        logger.info("Configuring connection with SCB " + scb);
+        try {
+            builder.withCloudSecureConnectBundle(Paths.get(scb));
+        } catch (InvalidPathException pe) {
+            try {
+                builder.withCloudSecureConnectBundle(new URL(scb));
+            } catch (MalformedURLException ue) {
+                throw new ConfigException("cassandra.secureBundlePath is set but appears to be invalid: " + scb);
+            }
+        }
+
+        String username = configManager.getProperty("cassandra.username", DEFAULT_ASTRA_BUNDLE_USERNAME);
+        String password = configManager.getProperty("cassandra.password");
+        builder.withAuthCredentials(username, password);
     }
 
     private void shutdown() {

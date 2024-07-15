@@ -22,6 +22,7 @@ public class GeoJsonFeature extends PropertyObject {
 
     @JsonProperty("id")
     private String id;
+
     @JsonProperty("geometry")
     private Geometry geometry;
 

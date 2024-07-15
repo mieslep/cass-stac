@@ -16,15 +16,15 @@ public class FeatureCollection extends PropertyObject {
     @JsonIgnore
     private String itemId;
 
-    private static final String ITEM_ID_KEY_NAME="dao.featureCollection.property.itemIdName";
+    private static final String ITEM_ID_KEY_NAME = "dao.featureCollection.property.itemIdName";
     private static final String ITEM_ID_NAME = ConfigManager.getInstance().getProperty(ITEM_ID_KEY_NAME, "item_id");
 
     // Getters and Setters
     public String getItemId() throws ConfigException {
-        if (null==this.itemId) {
+        if (null == this.itemId) {
             this.itemId = (String) getProperties().get(ITEM_ID_NAME);
-            if (null==this.itemId) {
-                throw new ConfigException("Item identifier expected on "+ITEM_ID_KEY_NAME+"="+ITEM_ID_NAME+" is not found on object's properties map.");
+            if (null == this.itemId) {
+                throw new ConfigException("Item identifier expected on " + ITEM_ID_KEY_NAME + "=" + ITEM_ID_NAME + " is not found on object's properties map.");
             }
         }
         return itemId;
