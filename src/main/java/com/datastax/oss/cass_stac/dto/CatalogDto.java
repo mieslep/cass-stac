@@ -1,21 +1,18 @@
-package us.anant.cass.stac.dto;
+package com.datastax.oss.cass_stac.dto;
 
 import java.util.List;
-import java.util.Map;
 
 import lombok.Builder;
 import lombok.Data;
 
 @Builder
 @Data
-public class ItemDto {
+public class CatalogDto {
 	private String type;
 	private String stac_version;
 	private List<String> stac_extensions;
 	private String id;
-	private GeoDto geometry;
-	private List<Float> bbox;
-	private String collection;
+	private String title;
+	private String description;
 	private List<LinkDto> links;
-	private Map<String, AssetDto> assets;
 }

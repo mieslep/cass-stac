@@ -1,8 +1,8 @@
-package us.anant.cass.stac.service;
+package com.datastax.oss.cass_stac.service;
 
 import org.springframework.stereotype.Service;
 
-import us.anant.cass.stac.dto.CatalogDto;
+import com.datastax.oss.cass_stac.dto.CatalogDto;
 
 @Service
 public class IndexService {

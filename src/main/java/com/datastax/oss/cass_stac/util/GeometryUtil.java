@@ -1,4 +1,4 @@
-package com.datastax.oss.cass_stac.dao.util;
+package com.datastax.oss.cass_stac.util;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -7,10 +7,13 @@ import org.locationtech.jts.io.WKBWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.nio.ByteBuffer;
 
+@Slf4j
 public class GeometryUtil {
-    private static final Logger logger = LoggerFactory.getLogger(GeometryUtil.class);
+    
 
     public static Geometry fromGeometryByteBuffer(ByteBuffer byteBuffer) {
         if (byteBuffer == null) {

@@ -1,4 +1,4 @@
-package us.anant.stac;
+package com.datastax.oss.cass_stac;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

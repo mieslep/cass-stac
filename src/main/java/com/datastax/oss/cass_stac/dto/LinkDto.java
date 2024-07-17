@@ -1,4 +1,4 @@
-package us.anant.cass.stac.dto;
+package com.datastax.oss.cass_stac.dto;
 
 import lombok.Builder;
 import lombok.Data;
