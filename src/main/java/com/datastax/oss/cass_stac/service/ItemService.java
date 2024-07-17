@@ -27,8 +27,7 @@ public class ItemService {
 	public void add(ItemDto dto) {
 		log.debug("Calling add");
 		final Item item = convertItemToDao(dto);
-		itemDao.save(item);
-		
+		itemDao.save(item);	
 	}
 	
 	private Item convertItemToDao(ItemDto dto) {
