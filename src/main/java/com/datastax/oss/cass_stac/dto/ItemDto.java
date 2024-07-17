@@ -18,4 +18,5 @@ public class ItemDto {
 	private String collection;
 	private List<LinkDto> links;
 	private Map<String, AssetDto> assets;
+	private Map<String, String> properties;
 }
