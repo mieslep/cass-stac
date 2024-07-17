@@ -20,7 +20,12 @@ public class ItemController {
 	public ResponseEntity<?> addItem(@RequestBody final ItemDto dto) {
 		
 		final Map<String, String> message = new HashMap<>();
-		message.put("message", "Item Added Suucessful");
-		return new ResponseEntity<>(message, HttpStatus.OK);
+		try {
+			message.put("message", "Item Added Suucessful");
+			return new ResponseEntity<>(message, HttpStatus.OK);
+		} catch (Exception ex) {
+			message.put("message", ex.getLocalizedMessage());
+			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 }
