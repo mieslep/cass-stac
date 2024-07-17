@@ -13,10 +13,10 @@ public class ItemDto {
 	private String stac_version;
 	private List<String> stac_extensions;
 	private String id;
-	private GeoDto geometry;
+	private GeometryDto geometry;
 	private List<Float> bbox;
 	private String collection;
 	private List<LinkDto> links;
 	private Map<String, AssetDto> assets;
-	private Map<String, String> properties;
+	private Map<String, Object> properties;
 }
