@@ -1,6 +1,8 @@
 # Setup
 ## Upload secure connect bundle under CASS-STAC folder
-# Updated build section in pom.xml as below
+## Updated cassandra connection details in config.properties
+
+## Updated build section in pom.xml as below
 
 <build>
     <plugins>
@@ -36,5 +38,5 @@
     </plugins>
 </build>
 
-# execute below command to run application
+## execute below command to run application
 java -cp target/cass-stac-0.1-SNAPSHOT-jar-with-dependencies.jar com.datastax.oss.cass_stac.App
