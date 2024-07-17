@@ -5,6 +5,8 @@
 # Learn more from ready-to-use templates: https://www.gitpod.io/docs/introduction/getting-started/quickstart
 
 tasks:
-  - init: ./mvnw install -DskipTests=false
-
-
+  - init: |
+        (
+         sdk install java 17.0.4.1-tem < /dev/null
+         mvn install -DskipTests=false
+        )
