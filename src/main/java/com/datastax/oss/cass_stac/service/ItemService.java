@@ -40,6 +40,7 @@ public class ItemService {
 		final ItemPrimaryKey pk = new ItemPrimaryKey();
 		pk.setId(id);
 		pk.setPartition_id(partionid);
+        item.setId(pk);
 		item.setCollection(dto.getCollection());
 		final Map<String,Object> properties = dto.getProperties();
 		final Object strDateTime = properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime");
