@@ -35,7 +35,7 @@ public class ItemService {
 		final Item item = new Item();
 		final String id = dto.getId();
         final LocalDateTime dt = LocalDateTime.now();
-        final Long ms = dt.toEpochSecond(ZoneOffset.UTC)
+        final Long ms = dt.toEpochSecond(ZoneOffset.UTC);
 		final String partionid = id + ms;
 		final ItemPrimaryKey pk = new ItemPrimaryKey();
 		pk.setId(id);
@@ -49,42 +49,4 @@ public class ItemService {
 		return item;
 	}
 
-	public void save(Item item) throws DaoException {
-        try {
-
-            PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, item);
-            Point centroid = item.getGeometry().getCentroid();
-            CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
-
-            OffsetDateTime datetime = (OffsetDateTime) (item.getProperties().containsKey("datetime") ? item.getProperties().get("datetime") : item.getProperties().get("start_datetime"));
-            String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
-            String id = item.getId();
-
-            PreparedStatement ps = session.prepare(insertIdsStmt);
-            BoundStatement boundStmt = ps.bind(
-                    id,
-                    partitionId,
-                    datetime);
-            session.execute(boundStmt);
-
-            ps = session.prepare(insertMainStmt);
-            boundStmt = ps.bind(
-                    partitionId,
-                    id,
-                    item.getCollection(),
-                    datetime,
-                    GeometryUtil.toByteBuffer(item.getGeometry()),
-                    centroidVector,
-                    propertyUtil.getIndexedTextProps(),
-                    propertyUtil.getIndexedNumberProps(),
-                    propertyUtil.getIndexedBooleanProps(),
-                    propertyUtil.getIndexedTimestampProps(),
-                    item.getPropertiesAsString(),
-                    item.getAdditionalAttributesAsString());
-            session.execute(boundStmt);
-
-        } catch (Exception e) {
-            throw new DaoException("An operation failed", e);
-        }
-    }
 }
