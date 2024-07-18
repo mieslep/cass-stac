@@ -10,4 +10,5 @@ public class LinkDto {
 	private String rel;
 	private String type;
 	private String title;
+	private String method;
 }

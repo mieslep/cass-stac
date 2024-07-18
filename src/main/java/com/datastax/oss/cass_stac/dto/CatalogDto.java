@@ -15,4 +15,5 @@ public class CatalogDto {
 	private String title;
 	private String description;
 	private List<LinkDto> links;
+	private List<String> conformsTo;
 }

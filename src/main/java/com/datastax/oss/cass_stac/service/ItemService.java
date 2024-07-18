@@ -75,25 +75,6 @@ public class ItemService {
                 item.setIndexed_properties_double(numberMap);
                 item.setIndexed_properties_text(textMap);
                 item.setIndexed_properties_timestamp(datetimeMap);
-
-
-        //        final GeometryDto geometryDto = dto.getGeometry();
-        //        ObjectMapper mapper = new ObjectMapper();
-        //        final JsonNode jsonNode = mapper.convertValue(geometryDto, JsonNode.class);
-        //        final Geometry geometry;
-        //		try {
-        //			geometry = jsonNode != null ? mapper.treeToValue(jsonNode, Geometry.class) : null;
-        //		} catch (JsonProcessingException | IllegalArgumentException e) {
-        //			throw new RuntimeException(e.getLocalizedMessage());
-        //		}
-        //
-        //		final List<Float[][]> coordinates = geometryDto.getCoordinates();
-        //
-        //        final Point centroid = geometry.getCentroid();
-        //
-        //        final String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
-                final String id = dto.getId();
-               // final String partitionId = id + "123456";
         
                 final GeoJSONReader reader = new GeoJSONReader();
                 final Geometry geometry = reader.read(dto.getGeometry().toString()); 
@@ -102,6 +83,8 @@ public class ItemService {
                 item.setCentroid(centroidVector);
 
                 String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
+                final String id = dto.getId();
+
                 final ItemPrimaryKey pk = new ItemPrimaryKey();
                 pk.setId(id);
                 pk.setPartition_id(partitionId);
@@ -111,7 +94,13 @@ public class ItemService {
                 
                 item.setCollection(dto.getCollection());
                 item.setAdditional_attributes(dto.getAdditional_attributes());
-                item.setProperties(properties.toString());
+                final String propertiesText;
+                try {
+                        propertiesText = new ObjectMapper().writeValueAsString(dto.getProperties());
+                } catch (Exception ex) {
+                        throw new RuntimeException(ex.getLocalizedMessage());
+                }
+                item.setProperties(propertiesText);
                 return item;
         }
 

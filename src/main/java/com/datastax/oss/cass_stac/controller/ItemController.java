@@ -16,13 +16,15 @@ import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.service.ItemService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/item")
-@Tag(name="Item Controller", description="The STAC Item to insert and get")
+@Tag(name="Item", description="The STAC Item to insert and get")
+@Schema(hidden = true)
 public class ItemController {
 	
 	private final ItemService itemService;
