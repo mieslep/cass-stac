@@ -8,6 +8,7 @@ import com.datastax.oss.cass_stac.entity.FeaturePrimaryKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
@@ -50,10 +51,15 @@ public class FeatureService {
         final String id = dto.getId();
         final String partitionId = id + "123456";
         final FeaturePrimaryKey pk = new FeaturePrimaryKey();
-        pk.setId(id);
+        final String label = "abc";
+        final Point centroid = geometry.getCentroid();
+        pk.setItem_id(id);
         pk.setPartition_id(partitionId);
+        pk.setLabel(label);
+        pk.setDatetime(datetime);
+        pk.setCentroid(centroid);
     
-//        feature.setId(pk);
+        feature.setId(pk);
         
 //        CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
 //        feature.setCentroid(centroidVector);

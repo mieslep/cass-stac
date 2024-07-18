@@ -11,18 +11,15 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Data
-@Table(value = "item")
+@Table(value = "feature")
 public class Feature {
 	@PrimaryKey
-	private ItemPrimaryKey id;
-	private String collection;
-	private OffsetDateTime datetime;
+	private FeaturePrimaryKey id;
+	private String additional_attributes;
 	private ByteBuffer geometry;
-	private Map<String, String> indexed_properties_text;
-	private Map<String, Double> indexed_properties_double;
 	private Map<String, Boolean> indexed_properties_boolean;
+	private Map<String, Double> indexed_properties_double;
+	private Map<String, String> indexed_properties_text;
 	private Map<String, Instant> indexed_properties_timestamp;
 	private String properties;
-	private String additional_attributes;
-	private CqlVector<Float> centroid;
 }

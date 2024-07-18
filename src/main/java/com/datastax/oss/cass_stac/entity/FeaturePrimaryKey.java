@@ -17,6 +17,14 @@ public class FeaturePrimaryKey implements Serializable{
 	private String partition_id;
 	
 	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 0)
-	private String id;
+	private String item_id;
 
+	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 1)
+	private String label;
+
+	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 2)
+	private String datetime;
+
+	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 3)
+	private String centroid;
 }
