@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Builder
 @Data
-public class GeometryDto {
+public class GeoDto {
 	private String type;
-	private List<Float[][]> coordinates;
+	private List<GeometryDto> geometries;
 }

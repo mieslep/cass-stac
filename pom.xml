@@ -74,6 +74,24 @@
       		<artifactId>h3</artifactId>
       		<version>4.1.1</version>
     	</dependency>
+    	
+    	<dependency>
+    		<groupId>com.datastax.oss</groupId>
+    		<artifactId>java-driver-core</artifactId>
+    		<version>4.17.0</version>
+		</dependency>
+		
+		<dependency>
+      		<groupId>org.jetbrains</groupId>
+      		<artifactId>annotations</artifactId>
+      		<version>17.0.0</version>
+      		<scope>compile</scope>
+    	</dependency>
+    	
+    	<dependency>
+      		<groupId>org.slf4j</groupId>
+      		<artifactId>slf4j-simple</artifactId>
+    	</dependency>
 
 	</dependencies>
 
