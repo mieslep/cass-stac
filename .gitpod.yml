@@ -9,4 +9,5 @@ tasks:
         (
          sdk install java 17.0.4.1-tem < /dev/null
          mvn install -DskipTests=false
+         curl -Ls "https://dtsx.io/get-astra-cli" | bash
         )
