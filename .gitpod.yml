@@ -8,6 +8,8 @@ tasks:
   - init: |
         (
          sdk install java 17.0.4.1-tem < /dev/null
-         mvn install -DskipTests=false
          curl -Ls "https://dtsx.io/get-astra-cli" | bash
+         curl -O  https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.tar.gz 
+         export CQLSH_PATH=./cqlsh-astra/
+         mvn install -DskipTests=false
         )
