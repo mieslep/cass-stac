@@ -1,42 +1,28 @@
 package com.datastax.oss.cass_stac.service;
 
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
+import com.datastax.oss.cass_stac.dao.GeoTimePartition;
+import com.datastax.oss.cass_stac.dao.FeatureDao;
+import com.datastax.oss.cass_stac.dto.FeatureDto;
+import com.datastax.oss.cass_stac.entity.Feature;
+import com.datastax.oss.cass_stac.entity.FeaturePrimaryKey;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import com.datastax.oss.cass_stac.dao.GeoTimePartition;
-import com.datastax.oss.cass_stac.dao.ItemDao;
-import com.datastax.oss.cass_stac.dto.CoOrdinateDto;
-import com.datastax.oss.cass_stac.dto.GeometryDto;
-import com.datastax.oss.cass_stac.dto.ItemDto;
-import com.datastax.oss.cass_stac.entity.Item;
-import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
-import com.datastax.oss.cass_stac.util.GeometryUtil;
-import com.datastax.oss.driver.api.core.data.CqlVector;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
+import java.time.OffsetDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class ItemService {
-	private final ItemDao itemDao;
+public class FeatureService {
+	private final FeatureDao featureDao;
 	
-	public void add(ItemDto dto) {
-		final Item item = convertItemToDao(dto);
-		itemDao.save(item);	
-		
+	public void add(FeatureDto dto) {
+		final Feature feature = convertFeatureToDao(dto);
+		featureDao.save(feature);
 	}
 	
-	private Item convertItemToDao(ItemDto dto)  {
-		final Item item = new Item();
+	private Feature convertFeatureToDao(FeatureDto dto)  {
+		final Feature feature = new Feature();
 		
         final int geoResolution = 6;
         final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
@@ -63,24 +49,22 @@ public class ItemService {
 //        final String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
         final String id = dto.getId();
         final String partitionId = id + "123456";
-        final ItemPrimaryKey pk = new ItemPrimaryKey();
+        final FeaturePrimaryKey pk = new FeaturePrimaryKey();
         pk.setId(id);
         pk.setPartition_id(partitionId);
     
-        item.setId(pk);
+//        feature.setId(pk);
         
 //        CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
-//        item.setCentroid(centroidVector);
+//        feature.setCentroid(centroidVector);
 //
-//        item.setGeometry(GeometryUtil.toByteBuffer(geometry));
+//        feature.setGeometry(GeometryUtil.toByteBuffer(geometry));
         
-//        item.setCollection(dto.getCollection());
-//        item.setAdditional_attributes(dto.getAdditional_attributes());
-//        item.setProperties(properties.toString());
-        
-        
-		
-		return item;
+//        feature.setCollection(dto.getCollection());
+//        feature.setAdditional_attributes(dto.getAdditional_attributes());
+//        feature.setProperties(properties.toString());
+
+		return feature;
 	}
 
 }
