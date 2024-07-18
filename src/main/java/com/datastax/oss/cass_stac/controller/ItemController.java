@@ -9,21 +9,26 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.service.ItemService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/item")
+@Tag(name="Item Controller", description="The STAC Item to insert and get")
 public class ItemController {
 	
 	private final ItemService itemService;
 	
+	
+	@Operation(description="POST method to store Feature data")
 	@PostMapping
 	public ResponseEntity<?> addItem(@RequestBody final ItemDto dto) {
 		
@@ -38,15 +43,15 @@ public class ItemController {
 			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	@Operation(description="Get method to fetch Item data based on Partition id and ID")
 	@GetMapping
-	public ResponseEntity<?> getItem(@RequestBody final ItemDto dto) {
+	public ResponseEntity<?> getItem(@RequestParam final String partitionid, @RequestParam final String id) {
 
 		final Map<String, String> message = new HashMap<>();
 
 		try {
-			message.put("message", "Item Retrieved Successfully");
-			itemService.add(dto);
-			return new ResponseEntity<>(message, HttpStatus.OK);
+			final ItemDto dto = itemService.getItem(partitionid, id);
+			return new ResponseEntity<>(dto, HttpStatus.OK);
 		} catch (Exception ex) {
 			message.put("message", ex.getLocalizedMessage());
 			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);

@@ -1,13 +1,11 @@
 package com.datastax.oss.cass_stac.entity;
 
-import com.datastax.oss.driver.api.core.data.CqlVector;
 import lombok.Data;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Data

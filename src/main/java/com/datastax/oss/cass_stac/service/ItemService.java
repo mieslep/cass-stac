@@ -34,6 +34,24 @@ public class ItemService {
 		itemDao.save(item);	
 		
 	}
+
+        public ItemDto getItem(final String partitionid, final String id) {
+                final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
+                itemPrimaryKey.setId(id);
+                itemPrimaryKey.setPartition_id(partitionid);
+                final Item item = itemDao.findById(itemPrimaryKey)
+                                        .orElseThrow(() -> new RuntimeException("No data found"));
+                final ItemDto itemDto = convertItemToDto(item);
+                return itemDto;
+        }
+        private ItemDto convertItemToDto(final Item item) {
+                return ItemDto.builder()
+                        .id(item.getId().getId())
+                        .collection(item.getCollection())
+                        .additional_attributes(item.getAdditional_attributes())
+                        //.properties(item.getProperties())
+                        .build();
+        }
 	
 	private Item convertItemToDao(ItemDto dto)  {
 		final Item item = new Item();

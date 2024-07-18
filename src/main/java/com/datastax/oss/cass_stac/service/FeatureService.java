@@ -52,12 +52,12 @@ public class FeatureService {
         final String partitionId = id + "123456";
         final FeaturePrimaryKey pk = new FeaturePrimaryKey();
         final String label = "abc";
-        final Point centroid = geometry.getCentroid();
+  //      final Point centroid = geometry.getCentroid();
         pk.setItem_id(id);
         pk.setPartition_id(partitionId);
         pk.setLabel(label);
         pk.setDatetime(datetime);
-        pk.setCentroid(centroid);
+ //       pk.setCentroid(centroid);
     
         feature.setId(pk);
         
