@@ -37,23 +37,23 @@ public class ItemService {
 		
 	}
 
-        public ItemDto getItem(final String partitionid, final String id) {
-                final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
-                itemPrimaryKey.setId(id);
-                itemPrimaryKey.setPartition_id(partitionid);
-                final Item item = itemDao.findById(itemPrimaryKey)
-                                        .orElseThrow(() -> new RuntimeException("No data found"));
-                final ItemDto itemDto = convertItemToDto(item);
-                return itemDto;
-        }
-        private ItemDto convertItemToDto(final Item item) {
-                return ItemDto.builder()
-                        .id(item.getId().getId())
-                        .collection(item.getCollection())
-                        .additional_attributes(item.getAdditional_attributes())
-                        //.properties(item.getProperties())
-                        .build();
-        }
+    public ItemDto getItem(final String partitionid, final String id) {
+            final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
+            itemPrimaryKey.setId(id);
+            itemPrimaryKey.setPartition_id(partitionid);
+            final Item item = itemDao.findById(itemPrimaryKey)
+                                    .orElseThrow(() -> new RuntimeException("No data found"));
+            final ItemDto itemDto = convertItemToDto(item);
+            return itemDto;
+    }
+    private ItemDto convertItemToDto(final Item item) {
+            return ItemDto.builder()
+                    .id(item.getId().getId())
+                    .collection(item.getCollection())
+                    .additional_attributes(item.getAdditional_attributes())
+                    //.properties(item.getProperties())
+                    .build();
+    }
 	
 	private Item convertItemToDao(ItemDto dto)  {
                 final Item item = new Item();
@@ -63,8 +63,21 @@ public class ItemService {
                 final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
         
                 final Map<String, Object> properties = dto.getProperties();
-                final Object dateTime = properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime");
-                final OffsetDateTime datetime = (OffsetDateTime) dateTime;
+                if (properties == null || properties.size() < 1 || properties.isEmpty()) {
+                	throw new RuntimeException("There are no properties set.");
+                }
+                final GeometryDto geometryDto = dto.getGeometry();
+                if (geometryDto == null) {
+                	throw new RuntimeException("There are no Geomentry set.");
+                }
+                final String dateTime = (String) (properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime"));
+                final OffsetDateTime datetime = OffsetDateTime.parse(dateTime);
+                
+                if (datetime == null) {
+                	throw new RuntimeException("No date time is set");
+                }
+                
+                item.setDatetime(datetime);
 
                 Map<String,Boolean> booleanMap = PropertyUtil.getBooleans(properties);
                 Map<String,String> textMap = PropertyUtil.getTexts(properties);
@@ -77,7 +90,13 @@ public class ItemService {
                 item.setIndexed_properties_timestamp(datetimeMap);
         
                 final GeoJSONReader reader = new GeoJSONReader();
-                final Geometry geometry = reader.read(dto.getGeometry().toString()); 
+                final String geometryString;
+                try {
+                	geometryString = new ObjectMapper().writeValueAsString(geometryDto);
+				} catch (JsonProcessingException e) {
+					throw new RuntimeException(e.getLocalizedMessage());
+				}
+                final Geometry geometry = reader.read(geometryString); 
                 Point centroid = geometry.getCentroid();
                 CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
                 item.setCentroid(centroidVector);

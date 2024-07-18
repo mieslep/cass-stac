@@ -9,5 +9,5 @@ import lombok.Data;
 @Data
 public class GeometryDto {
 	private String type;
-	private List<Float[]> coordinates;
+	private List<Double[]> coordinates;
 }

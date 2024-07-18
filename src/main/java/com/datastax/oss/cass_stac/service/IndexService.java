@@ -68,6 +68,8 @@ public class IndexService {
 		links.add(servicePostcDto);
 
 		return CatalogDto.builder()
+				.stac_extensions(null)
+				.stac_version("1.0")
 				.id("examples")
 				.type("Catalog")
 				.description("This Catalog aims to demonstrate the a simple landing page")
