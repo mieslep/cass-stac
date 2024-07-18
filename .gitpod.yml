@@ -9,6 +9,8 @@ tasks:
         (
          sdk install java 17.0.4.1-tem < /dev/null
          curl -Ls "https://dtsx.io/get-astra-cli" | bash
+         pyenv install 2.7.16
+         pyenv global 2.7.16
          curl -O  https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.tar.gz 
          tar xvfz cqlsh-astra-20221114-bin.tar.gz
          export CQLSH_PATH=./cqlsh-astra/
