@@ -13,7 +13,6 @@ public class FeatureDto {
 	private String stac_version;
 	private List<String> stac_extensions;
 	private String id;
-	//private GeometryDto geometry;
 	private GeometryDto geometry;
 	private List<Float> bbox;
 	private String collection;
