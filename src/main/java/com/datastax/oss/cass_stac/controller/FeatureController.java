@@ -49,11 +49,12 @@ public class FeatureController {
 										@RequestParam final Double latitude,
 										@RequestParam final Double longitude) {
 
-		final Map<String, String> message = new HashMap<>();
+		
 		try {
 			final FeatureDto dto = featureService.getFeature(partitionid, itemid, label, datetime, latitude, longitude);
 			return new ResponseEntity<>(dto, HttpStatus.OK);
 		} catch (Exception ex) {
+			final Map<String, String> message = new HashMap<>();
 			message.put("message", ex.getLocalizedMessage());
 			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
 		}

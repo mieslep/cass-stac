@@ -40,82 +40,77 @@ public class FeatureService {
 		featureDao.save(feature);
 	}
 
-    public FeatureDto getFeature(final String partitionid,
-                                 final String itemid,
-                                 final String label,
-                                 final String dateTime,
-                                 final Double latitude,
-                                 final Double longitude) {
-        final FeaturePrimaryKey featurePrimaryKey = new FeaturePrimaryKey();
-        final Coordinate coordinate = new Coordinate(longitude, latitude);
-        GeometryFactory geometryFactory = new GeometryFactory();
-        featurePrimaryKey.setItem_id(itemid);
-        featurePrimaryKey.setPartition_id(partitionid);
-        featurePrimaryKey.setLabel(label);
-        featurePrimaryKey.setDatetime(dateTime);
-        featurePrimaryKey.setCentroid(coordinate, geometryFactory);
-        final Feature feature = featureDao.findById(featurePrimaryKey)
-                .orElseThrow(() -> new RuntimeException("No data found"));
-        final FeatureDto featureDto = convertFeatureToDto(feature);
-        return featureDto;
-    }
-    private FeatureDto convertFeatureToDto(final Feature feature) {
-        return FeatureDto.builder()
-                .id(feature.getId().getItem_id())
-                .partition_id(feature.getId().getPartition_id())
-                .additional_attributes(feature.getAdditional_attributes())
-                .build();
-    }
+        public FeatureDto getFeature(final String partitionid,
+                                        final String itemid,
+                                        final String label,
+                                        final String dateTime,
+                                        final Double latitude,
+                                        final Double longitude) {
 
+                final FeaturePrimaryKey featurePrimaryKey = new FeaturePrimaryKey();
 
+                final CqlVector<Float> centroidVector = CqlVector.newInstance(longitude.floatValue(),latitude.floatValue());
+                featurePrimaryKey.setItem_id(itemid);
+                featurePrimaryKey.setPartition_id(partitionid);
+                featurePrimaryKey.setLabel(label);
+                featurePrimaryKey.setDatetime(Instant.parse(dateTime));
+                featurePrimaryKey.setCentroid(centroidVector);
 
+                final Feature feature = featureDao.findById(featurePrimaryKey)
+                        .orElseThrow(() -> new RuntimeException("No data found"));
+                final FeatureDto featureDto = convertFeatureToDto(feature);
+                return featureDto;
+        }
+        private FeatureDto convertFeatureToDto(final Feature feature) {
+                return FeatureDto.builder()
+                        .id(feature.getId().getItem_id())
+                        .partition_id(feature.getId().getPartition_id())
+                        .additional_attributes(feature.getAdditional_attributes())
+                        .build();
+        }
 
 	private Feature convertFeatureToDao(FeatureDto dto)  {
 		final Feature feature = new Feature();
-		
-        final int geoResolution = 6;
-        final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
-        final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
-     
-        final Map<String, Object> properties = dto.getProperties();
-        final String dateTime = (String) (properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime"));
-        final Instant datetime = Instant.parse(dateTime);
-        final OffsetDateTime offDatetime = (OffsetDateTime.parse(dateTime)) ;
-
-        final GeometryDto geometryDto = dto.getGeometry();
-        final Geometry geometry;
-		try {
-			geometry = createGeometryFromDto(geometryDto);
-		} catch (IllegalArgumentException e) {
-			throw new RuntimeException(e.getLocalizedMessage());
-		}
-
-		final java.util.List coordinates = geometryDto.getCoordinates();
-
-        final Point centroid = geometry.getCentroid();
-
-        final String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, offDatetime);
-        final String id = dto.getId();
-        //final String partitionId = id + "123456";
-        final FeaturePrimaryKey pk = new FeaturePrimaryKey();
-        final String label = "abc";
-        //final Point centroid = geometry.getCentroid();
-        pk.setItem_id(id);
-        pk.setPartition_id(partitionId);
-        pk.setLabel(label);
-        pk.setDatetime(dateTime);
-        CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
-        pk.setCentroid(centroidVector);
-
-        feature.setId(pk);
-
-        feature.setGeometry(GeometryUtil.toByteBuffer(geometry));
+                final int geoResolution = 6;
+                final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
+                final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
         
-        //feature.setCollection(dto.getCollection());
-        feature.setAdditional_attributes(dto.getAdditional_attributes());
-        feature.setProperties(properties.toString());
+                final Map<String, Object> properties = dto.getProperties();
+                final String dateTime = (String) (properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime"));
+                final Instant datetime = Instant.parse(dateTime);
+                final OffsetDateTime offDatetime = OffsetDateTime.parse(dateTime) ;
 
-		return feature;
+                final GeometryDto geometryDto = dto.getGeometry();
+                final Geometry geometry;
+                try {
+                        geometry = createGeometryFromDto(geometryDto);
+                } catch (IllegalArgumentException e) {
+                        throw new RuntimeException(e.getLocalizedMessage());
+                }
+
+
+                final Point centroid = geometry.getCentroid();
+
+                final String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, offDatetime);
+                final String id = dto.getId();
+        
+                final FeaturePrimaryKey pk = new FeaturePrimaryKey();
+                final String label = dto.getLabel();
+                pk.setItem_id(id);
+                pk.setPartition_id(partitionId);
+                pk.setLabel(label);
+                pk.setDatetime(datetime);
+                CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
+                pk.setCentroid(centroidVector);
+
+                feature.setId(pk);
+
+                feature.setGeometry(GeometryUtil.toByteBuffer(geometry));
+                
+                feature.setAdditional_attributes(dto.getAdditional_attributes());
+                feature.setProperties(properties.toString());
+
+                return feature;
 	}
 
         private Geometry createGeometryFromDto(GeometryDto geometryDto) {

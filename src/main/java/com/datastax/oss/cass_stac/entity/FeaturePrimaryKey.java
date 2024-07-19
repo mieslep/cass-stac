@@ -9,7 +9,7 @@ import com.datastax.oss.driver.api.core.data.CqlVector;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.OffsetDateTime;
+
 
 @Data
 @PrimaryKeyClass
@@ -27,7 +27,7 @@ public class FeaturePrimaryKey implements Serializable{
 	private String label;
 
 	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 3)
-	private String datetime;
+	private Instant datetime;
 
 	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 4)
 	private CqlVector<Float> centroid;
