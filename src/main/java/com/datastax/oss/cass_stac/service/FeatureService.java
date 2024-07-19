@@ -71,8 +71,8 @@ public class FeatureService {
     
         feature.setId(pk);
         
-        //CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
-        //feature.setCentroid(centroidVector);
+        CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
+        feature.setCentroid(centroidVector);
 
         feature.setGeometry(GeometryUtil.toByteBuffer(geometry));
         
