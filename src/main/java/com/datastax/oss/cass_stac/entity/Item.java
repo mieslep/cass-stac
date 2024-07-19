@@ -1,6 +1,7 @@
 package com.datastax.oss.cass_stac.entity;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class Item {
 	@PrimaryKey
 	private ItemPrimaryKey id;
 	private String collection;
-	private OffsetDateTime datetime;
+	private Instant datetime;
 	private ByteBuffer geometry;
 	private Map<String, String> indexed_properties_text;
 	private Map<String, Double> indexed_properties_double;

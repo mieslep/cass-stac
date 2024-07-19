@@ -8,6 +8,7 @@ import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import com.datastax.oss.driver.api.core.data.CqlVector;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @Data
@@ -26,7 +27,7 @@ public class FeaturePrimaryKey implements Serializable{
 	private String label;
 
 	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 3)
-	private OffsetDateTime datetime;
+	private String datetime;
 
 	@PrimaryKeyColumn(type=PrimaryKeyType.CLUSTERED, ordinal = 4)
 	private CqlVector<Float> centroid;

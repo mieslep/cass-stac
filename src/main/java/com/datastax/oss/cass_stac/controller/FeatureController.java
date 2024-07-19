@@ -3,18 +3,16 @@ package com.datastax.oss.cass_stac.controller;
 import com.datastax.oss.cass_stac.dto.FeatureDto;
 import com.datastax.oss.cass_stac.service.FeatureService;
 
+import com.datastax.oss.driver.api.core.data.CqlVector;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,14 +42,17 @@ public class FeatureController {
 
 	@Operation(description = "Get Feature by passing the values")
 	@GetMapping
-	public ResponseEntity<?> getFeature(@RequestBody final FeatureDto dto) {
+	public ResponseEntity<?> getFeature(@RequestParam final String partitionid,
+										@RequestParam final String itemid,
+										@RequestParam final String label,
+										@RequestParam final String datetime,
+										@RequestParam final Double latitude,
+										@RequestParam final Double longitude) {
 
 		final Map<String, String> message = new HashMap<>();
-
 		try {
-			message.put("message", "Feature Retrieved Successful");
-			featureService.add(dto);
-			return new ResponseEntity<>(message, HttpStatus.OK);
+			final FeatureDto dto = featureService.getFeature(partitionid, itemid, label, datetime, latitude, longitude);
+			return new ResponseEntity<>(dto, HttpStatus.OK);
 		} catch (Exception ex) {
 			message.put("message", ex.getLocalizedMessage());
 			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);

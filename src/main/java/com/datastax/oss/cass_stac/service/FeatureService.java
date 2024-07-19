@@ -1,5 +1,8 @@
 package com.datastax.oss.cass_stac.service;
 
+import com.datastax.oss.cass_stac.dto.ItemDto;
+import com.datastax.oss.cass_stac.entity.Item;
+import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
@@ -15,8 +18,11 @@ import com.datastax.oss.cass_stac.entity.FeaturePrimaryKey;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import com.datastax.oss.driver.api.core.data.CqlVector;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
@@ -33,7 +39,37 @@ public class FeatureService {
 		final Feature feature = convertFeatureToDao(dto);
 		featureDao.save(feature);
 	}
-	
+
+    public FeatureDto getFeature(final String partitionid,
+                                 final String itemid,
+                                 final String label,
+                                 final String dateTime,
+                                 final Double latitude,
+                                 final Double longitude) {
+        final FeaturePrimaryKey featurePrimaryKey = new FeaturePrimaryKey();
+        final Coordinate coordinate = new Coordinate(longitude, latitude);
+        GeometryFactory geometryFactory = new GeometryFactory();
+        featurePrimaryKey.setItem_id(itemid);
+        featurePrimaryKey.setPartition_id(partitionid);
+        featurePrimaryKey.setLabel(label);
+        featurePrimaryKey.setDatetime(dateTime);
+        featurePrimaryKey.setCentroid(coordinate, geometryFactory);
+        final Feature feature = featureDao.findById(featurePrimaryKey)
+                .orElseThrow(() -> new RuntimeException("No data found"));
+        final FeatureDto featureDto = convertFeatureToDto(feature);
+        return featureDto;
+    }
+    private FeatureDto convertFeatureToDto(final Feature feature) {
+        return FeatureDto.builder()
+                .id(feature.getId().getItem_id())
+                .partition_id(feature.getId().getPartition_id())
+                .additional_attributes(feature.getAdditional_attributes())
+                .build();
+    }
+
+
+
+
 	private Feature convertFeatureToDao(FeatureDto dto)  {
 		final Feature feature = new Feature();
 		
@@ -42,9 +78,10 @@ public class FeatureService {
         final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
      
         final Map<String, Object> properties = dto.getProperties();
-        final Object dateTime = properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime");
-        final OffsetDateTime datetime = (OffsetDateTime) dateTime;
-        
+        final String dateTime = (String) (properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime"));
+        final Instant datetime = Instant.parse(dateTime);
+        final OffsetDateTime offDatetime = (OffsetDateTime.parse(dateTime)) ;
+
         final GeometryDto geometryDto = dto.getGeometry();
         final Geometry geometry;
 		try {
@@ -57,7 +94,7 @@ public class FeatureService {
 
         final Point centroid = geometry.getCentroid();
 
-        final String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
+        final String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, offDatetime);
         final String id = dto.getId();
         //final String partitionId = id + "123456";
         final FeaturePrimaryKey pk = new FeaturePrimaryKey();
@@ -66,13 +103,11 @@ public class FeatureService {
         pk.setItem_id(id);
         pk.setPartition_id(partitionId);
         pk.setLabel(label);
-        pk.setDatetime(datetime);
-        //pk.setCentroid(centroid);
-    
-        feature.setId(pk);
-        
+        pk.setDatetime(dateTime);
         CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
-        feature.setCentroid(centroidVector);
+        pk.setCentroid(centroidVector);
+
+        feature.setId(pk);
 
         feature.setGeometry(GeometryUtil.toByteBuffer(geometry));
         
