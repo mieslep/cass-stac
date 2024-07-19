@@ -1,5 +1,6 @@
 package com.datastax.oss.cass_stac.service;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +50,7 @@ public class ItemService {
     private ItemDto convertItemToDto(final Item item) {
             return ItemDto.builder()
                     .id(item.getId().getId())
+                    .partition_id(item.getId().getPartition_id())
                     .collection(item.getCollection())
                     .additional_attributes(item.getAdditional_attributes())
                     //.properties(item.getProperties())
@@ -71,7 +73,8 @@ public class ItemService {
                 	throw new RuntimeException("There are no Geomentry set.");
                 }
                 final String dateTime = (String) (properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime"));
-                final OffsetDateTime datetime = OffsetDateTime.parse(dateTime);
+                final Instant datetime = Instant.parse(dateTime);
+                final OffsetDateTime offDatetime = (OffsetDateTime.parse(dateTime)) ;
                 
                 if (datetime == null) {
                 	throw new RuntimeException("No date time is set");
@@ -101,7 +104,7 @@ public class ItemService {
                 CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
                 item.setCentroid(centroidVector);
 
-                String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
+                String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, offDatetime);
                 final String id = dto.getId();
 
                 final ItemPrimaryKey pk = new ItemPrimaryKey();
