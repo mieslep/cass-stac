@@ -11,9 +11,11 @@ import org.springframework.stereotype.Service;
 
 import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
+import com.datastax.oss.cass_stac.dao.ItemIdDao;
 import com.datastax.oss.cass_stac.dto.GeometryDto;
 import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.entity.Item;
+import com.datastax.oss.cass_stac.entity.ItemId;
 import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.cass_stac.util.PropertyUtil;
@@ -26,11 +28,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ItemService {
 	private final ItemDao itemDao;
+	private final ItemIdDao itemIdDao;
 	
 	public void add(ItemDto dto) {
 		final Item item = convertItemToDao(dto);
-		itemDao.save(item);	
-		
+		final Item it = itemDao.save(item);	
+		final ItemId itemId = createItemId(it);
+		itemIdDao.save(itemId);
 	}
 
     public ItemDto getItem(final String partitionid, final String id) {
@@ -42,6 +46,19 @@ public class ItemService {
             final ItemDto itemDto = convertItemToDto(item);
             return itemDto;
     }
+    
+    private ItemId createItemId(final Item it) {
+    	final String id = it.getId().getId();
+		final Instant datetime = it.getDatetime();
+		final String partition_id = it.getId().getPartition_id();
+		final ItemId itemId = new ItemId();
+		itemId.setDatetime(datetime);
+		itemId.setId(id);
+		itemId.setPartition_id(partition_id);
+		return itemId;
+
+    }
+    
     private ItemDto convertItemToDto(final Item item) {
             return ItemDto.builder()
                     .id(item.getId().getId())
