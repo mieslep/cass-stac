@@ -1,36 +1,29 @@
 package com.datastax.oss.cass_stac.service;
 
-import com.datastax.oss.cass_stac.dto.ItemDto;
-import com.datastax.oss.cass_stac.entity.Item;
-import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
-import com.datastax.oss.cass_stac.util.PropertyUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.Coordinates;
-import org.locationtech.jts.geom.*;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import com.datastax.oss.cass_stac.dao.GeoTimePartition;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.springframework.stereotype.Service;
+
 import com.datastax.oss.cass_stac.dao.FeatureDao;
+import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dto.FeatureDto;
 import com.datastax.oss.cass_stac.dto.GeometryDto;
 import com.datastax.oss.cass_stac.entity.Feature;
 import com.datastax.oss.cass_stac.entity.FeaturePrimaryKey;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.ArrayList;
+import com.datastax.oss.cass_stac.util.PropertyUtil;
 import com.datastax.oss.driver.api.core.data.CqlVector;
-import org.springframework.web.bind.annotation.RequestParam;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.awt.*;
-import java.time.OffsetDateTime;
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +34,26 @@ public class FeatureService {
 		final Feature feature = convertFeatureToDao(dto);
 		featureDao.save(feature);
 	}
+	
+	public List<FeatureDto> getFeature(final String partitionid,
+            final String itemid,
+            final String label,
+            final String dateTime) {
+		
+		final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
+		
+		final long offsetEpohs = offsetDateTime.toEpochSecond();
+		final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
+		
+		final List<Feature> features = featureDao.FindFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
+		if (features == null || features.isEmpty() || features.size() < 1) {
+			throw new RuntimeException("No data found");
+		}
+		
+		return features.stream().map(this::convertFeatureToDto).collect(Collectors.toList());
+		
+	}
+	
 
         public FeatureDto getFeature(final String partitionid,
                                         final String itemid,

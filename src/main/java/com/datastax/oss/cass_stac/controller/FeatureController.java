@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -39,7 +40,27 @@ public class FeatureController {
 			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	@Operation(description = "Get Feature by passing the values")
+	@GetMapping("/ByIdLabelDatetime")
+	public ResponseEntity<?> getFeatureByIdLabelDateTime(@RequestParam final String partitionid,
+			@RequestParam final String itemid,
+			@RequestParam final String label,
+			@RequestParam final String datetime) {
 
+
+		try {
+			final List<FeatureDto> dtos = featureService.getFeature(partitionid, itemid, label, datetime);
+			final Map<String, List<FeatureDto>> message = new HashMap<>();
+			message.put("features", dtos);
+			return new ResponseEntity<>(message, HttpStatus.OK);
+		} catch (Exception ex) {
+			final Map<String, String> message = new HashMap<>();
+			message.put("message", ex.getLocalizedMessage());
+			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
 	@Operation(description = "Get Feature by passing the values")
 	@GetMapping
 	public ResponseEntity<?> getFeature(@RequestParam final String partitionid,
