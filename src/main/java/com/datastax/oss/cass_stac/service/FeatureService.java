@@ -55,8 +55,26 @@ public class FeatureService {
         		final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
         		
                 final FeaturePrimaryKey featurePrimaryKey = new FeaturePrimaryKey();
+                
+                final List<Double[]> coordinates = new ArrayList<Double[]>();
+                final Double[] latlangs = new Double[2];
+                latlangs[0] = latitude;
+                latlangs[1] = longitude;
+                coordinates.add(latlangs);
+                final GeometryDto geometryDto = GeometryDto.builder()
+                									.type("Polygon")
+                									.coordinates(coordinates)
+                									.build();
+                final Geometry geometry;
+                try {
+                    geometry = GeometryUtil.createGeometryFromDto(geometryDto);
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException(e.getLocalizedMessage());
+                }
 
-                final CqlVector<Float> centroidVector = CqlVector.newInstance(longitude.floatValue(),latitude.floatValue());
+                final Point centroid = geometry.getCentroid();
+                CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
+                
                 featurePrimaryKey.setItem_id(itemid);
                 featurePrimaryKey.setPartition_id(partitionid);
                 featurePrimaryKey.setLabel(label);
@@ -68,6 +86,7 @@ public class FeatureService {
                 final FeatureDto featureDto = convertFeatureToDto(feature);
                 return featureDto;
         }
+        
         private FeatureDto convertFeatureToDto(final Feature feature) {
                 return FeatureDto.builder()
                         .id(feature.getId().getItem_id())
