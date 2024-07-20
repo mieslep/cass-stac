@@ -47,6 +47,24 @@ public class ItemService {
             return itemDto;
     }
     
+    public ItemDto getItem(final String id) {
+    	final ItemId itemId = getItemId(id);
+    
+        final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
+        itemPrimaryKey.setId(id);
+        itemPrimaryKey.setPartition_id(itemId.getPartition_id());
+        final Item item = itemDao.findById(itemPrimaryKey)
+                                .orElseThrow(() -> new RuntimeException("No data found"));
+        final ItemDto itemDto = convertItemToDto(item);
+        return itemDto;
+    }
+    
+    public ItemId getItemId(final String id) {
+    	final ItemId itemId = itemIdDao.findById(id)
+    		.orElseThrow(() -> new RuntimeException("No data found for selected id"));
+    	return itemId;
+    }
+    
     private ItemId createItemId(final Item it) {
     	final String id = it.getId().getId();
 		final Instant datetime = it.getDatetime();
