@@ -42,8 +42,9 @@ public class FeatureService {
 		
 		final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
 		
-		final long offsetEpohs = offsetDateTime.toEpochSecond();
-		final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
+		//final long offsetEpohs = offsetDateTime.toInstant();
+		//final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
+		final Instant instantDateTime = offsetDateTime.toInstant();
 		
 		final List<Feature> features = featureDao.FindFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
 		if (features == null || features.isEmpty() || features.size() < 1) {
@@ -64,15 +65,18 @@ public class FeatureService {
         	
         		final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
         		
-        		final long offsetEpohs = offsetDateTime.toEpochSecond();
-        		final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
+        		final Instant instantDateTime = offsetDateTime.toInstant();
         		
                 final FeaturePrimaryKey featurePrimaryKey = new FeaturePrimaryKey();
                 
                 final List<Double[]> coordinates = new ArrayList<Double[]>();
-                final Double[] latlangs = new Double[2];
+                Double[] latlangs = new Double[2];
                 latlangs[0] = latitude;
                 latlangs[1] = longitude;
+                coordinates.add(latlangs);
+                latlangs = new Double[2];
+                latlangs[0] = -35.10115;
+                latlangs[1] = 144.54592;
                 coordinates.add(latlangs);
                 final GeometryDto geometryDto = GeometryDto.builder()
                 									.type("Polygon")
