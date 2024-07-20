@@ -3,17 +3,14 @@ package com.datastax.oss.cass_stac.service;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
-import org.wololo.jts2geojson.GeoJSONReader;
 
 import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
-import com.datastax.oss.cass_stac.dto.CoOrdinateDto;
 import com.datastax.oss.cass_stac.dto.GeometryDto;
 import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.entity.Item;
@@ -21,8 +18,6 @@ import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.cass_stac.util.PropertyUtil;
 import com.datastax.oss.driver.api.core.data.CqlVector;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -92,15 +87,14 @@ public class ItemService {
                 item.setIndexed_properties_text(textMap);
                 item.setIndexed_properties_timestamp(datetimeMap);
         
-                final GeoJSONReader reader = new GeoJSONReader();
-                final String geometryString;
+                final Geometry geometry;
                 try {
-                	geometryString = new ObjectMapper().writeValueAsString(geometryDto);
-				} catch (JsonProcessingException e) {
-					throw new RuntimeException(e.getLocalizedMessage());
-				}
-                final Geometry geometry = reader.read(geometryString); 
-                Point centroid = geometry.getCentroid();
+                        geometry = GeometryUtil.createGeometryFromDto(geometryDto);
+                } catch (IllegalArgumentException e) {
+                        throw new RuntimeException(e.getLocalizedMessage());
+                }
+                
+                final Point centroid = geometry.getCentroid();
                 CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
                 item.setCentroid(centroidVector);
 

@@ -46,7 +46,12 @@ public class FeatureService {
                                         final String dateTime,
                                         final Double latitude,
                                         final Double longitude) {
-
+        	
+        		final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
+        		
+        		final long offsetEpohs = offsetDateTime.toEpochSecond();
+        		final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
+        		
                 final FeaturePrimaryKey featurePrimaryKey = new FeaturePrimaryKey();
 
                 final CqlVector<Float> centroidVector = CqlVector.newInstance(longitude.floatValue(),latitude.floatValue());

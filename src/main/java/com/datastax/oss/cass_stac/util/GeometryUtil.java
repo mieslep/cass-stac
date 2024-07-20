@@ -1,11 +1,17 @@
 package com.datastax.oss.cass_stac.util;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKBReader;
 import org.locationtech.jts.io.WKBWriter;
+
+import com.datastax.oss.cass_stac.dto.GeometryDto;
 
 public class GeometryUtil {
     
@@ -30,5 +36,14 @@ public class GeometryUtil {
         byte[] bytes = new WKBWriter().write(geometry);
         return ByteBuffer.wrap(bytes);
     }
+    
+    public static  Geometry createGeometryFromDto(GeometryDto geometryDto) {
+        List<Coordinate> coordinates = new ArrayList<>();
+        for (Double[] coordinate : geometryDto.getCoordinates()) {
+                coordinates.add(new Coordinate(coordinate[0], coordinate[1]));
+        }
+        GeometryFactory geometryFactory = new GeometryFactory();
+        return geometryFactory.createPolygon(coordinates.toArray(new Coordinate[0]));
+}
 
 }
