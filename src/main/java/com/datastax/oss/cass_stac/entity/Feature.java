@@ -4,8 +4,6 @@ import lombok.Data;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
-import com.datastax.oss.driver.api.core.data.CqlVector;
-
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Map;
@@ -22,5 +20,4 @@ public class Feature {
 	private Map<String, String> indexed_properties_text;
 	private Map<String, Instant> indexed_properties_timestamp;
 	private String properties;
-	private CqlVector<Float> centroid;
 }
