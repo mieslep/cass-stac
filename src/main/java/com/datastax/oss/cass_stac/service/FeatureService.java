@@ -44,14 +44,14 @@ public class FeatureService {
 		//final long offsetEpohs = offsetDateTime.toInstant();
 		//final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
 
-//		final List<Feature> features = featureDao.FindFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
         if ((label == null || label.isEmpty()) && (dateTime == null || dateTime.isEmpty())) {
             features = featureDao.findFeatureById(partitionid, itemid);
         } else if (dateTime == null || dateTime.isEmpty()) {
             features = featureDao.findFeatureByIdAndLabel(partitionid, itemid, label);
         } else {
             final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
-            final Instant instantDateTime = offsetDateTime.toInstant();            features = featureDao.FindFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
+            final Instant instantDateTime = offsetDateTime.toInstant();
+            features = featureDao.findFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
         }
 		if (features == null || features.isEmpty() || features.size() < 1) {
 			throw new RuntimeException("No data found");
@@ -187,14 +187,4 @@ public class FeatureService {
 
                 return feature;
 	}
-
-//        private Geometry createGeometryFromDto(GeometryDto geometryDto) {
-//                List<Coordinate> coordinates = new ArrayList<>();
-//                for (Double[] coordinate : geometryDto.getCoordinates()) {
-//                        coordinates.add(new Coordinate(coordinate[0], coordinate[1]));
-//                }
-//                GeometryFactory geometryFactory = new GeometryFactory();
-//                return geometryFactory.createPolygon(coordinates.toArray(new Coordinate[0]));
-//        }
-
 }

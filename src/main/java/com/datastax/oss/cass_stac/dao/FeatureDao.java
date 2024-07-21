@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 public interface FeatureDao extends  CassandraRepository<Feature, FeaturePrimaryKey>{
 
 	@Query(value = "SELECT * FROM feature where partition_id = :partition_id AND item_id = :item_id AND label = :label AND datetime = :datetime")
-	List<Feature> FindFeatureByIdLabelAndDate(@Param("partition_id") final String partition_id, @Param("item_id") final String item_id, @Param("label") final String label, @Param("datetime") final Instant datetime);
+	List<Feature> findFeatureByIdLabelAndDate(@Param("partition_id") final String partition_id, @Param("item_id") final String item_id, @Param("label") final String label, @Param("datetime") final Instant datetime);
 
 	@Query(value = "SELECT * FROM feature WHERE partition_id = :partition_id AND item_id = :item_id")
 	List<Feature> findFeatureById(@Param("partition_id") String partitionId, @Param("item_id") String itemId);

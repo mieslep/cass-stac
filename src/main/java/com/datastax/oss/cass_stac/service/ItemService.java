@@ -3,8 +3,11 @@ package com.datastax.oss.cass_stac.service;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.datastax.oss.cass_stac.entity.Feature;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
@@ -37,19 +40,22 @@ public class ItemService {
 		itemIdDao.save(itemId);
 	}
 
-    public ItemDto getItem(final String partitionid, final String id) {
-            final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
-            itemPrimaryKey.setId(id);
-            itemPrimaryKey.setPartition_id(partitionid);
-            final Item item = itemDao.findById(itemPrimaryKey)
-                                    .orElseThrow(() -> new RuntimeException("No data found"));
-            final ItemDto itemDto = convertItemToDto(item);
-            return itemDto;
+    public List<ItemDto> getItem(final String partitionid, final String id) {
+        final List<Item> item;
+            if (id == null || id.isEmpty()) {
+                item = itemDao.findItemByPartitionId(partitionid);
+            } else {
+                item = itemDao.findItemByPartitionIdAndId(partitionid, id);
+            }
+            if (item == null || item.isEmpty()){
+                throw new RuntimeException("No data found");
+            }
+            return item.stream().map(this::convertItemToDto).collect(Collectors.toList());
     }
     
     public ItemDto getItem(final String id) {
     	final ItemId itemId = getItemId(id);
-    
+
         final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
         itemPrimaryKey.setId(id);
         itemPrimaryKey.setPartition_id(itemId.getPartition_id());
@@ -58,7 +64,7 @@ public class ItemService {
         final ItemDto itemDto = convertItemToDto(item);
         return itemDto;
     }
-    
+
     public ItemId getItemId(final String id) {
     	final ItemId itemId = itemIdDao.findById(id)
     		.orElseThrow(() -> new RuntimeException("No data found for selected id"));

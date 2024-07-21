@@ -1,8 +1,10 @@
 package com.datastax.oss.cass_stac.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.datastax.oss.cass_stac.dto.FeatureDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,14 +49,14 @@ public class ItemController {
 	}
 	@Operation(description="Get method to fetch Item data based on Partition id and ID")
 	@GetMapping
-	public ResponseEntity<?> getItem(@RequestParam final String partitionid, @RequestParam final String id) {
-
-		final Map<String, String> message = new HashMap<>();
-
+	public ResponseEntity<?> getItem(@RequestParam final String partitionid, @RequestParam(required = false) final String id) {
 		try {
-			final ItemDto dto = itemService.getItem(partitionid, id);
+			final List<ItemDto> dto = itemService.getItem(partitionid, id);
+			final Map<String, List<ItemDto>> message = new HashMap<>();
+			message.put("item", dto);
 			return new ResponseEntity<>(dto, HttpStatus.OK);
 		} catch (Exception ex) {
+			final Map<String, String> message = new HashMap<>();
 			message.put("message", ex.getLocalizedMessage());
 			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
