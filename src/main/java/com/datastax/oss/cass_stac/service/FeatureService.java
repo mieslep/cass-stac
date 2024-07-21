@@ -39,14 +39,20 @@ public class FeatureService {
             final String itemid,
             final String label,
             final String dateTime) {
-		
-		final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
-		
+        final List<Feature> features;
+
 		//final long offsetEpohs = offsetDateTime.toInstant();
 		//final Instant instantDateTime = Instant.ofEpochMilli(offsetEpohs);
-		final Instant instantDateTime = offsetDateTime.toInstant();
-		
-		final List<Feature> features = featureDao.FindFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
+
+//		final List<Feature> features = featureDao.FindFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
+        if ((label == null || label.isEmpty()) && (dateTime == null || dateTime.isEmpty())) {
+            features = featureDao.findFeatureById(partitionid, itemid);
+        } else if (dateTime == null || dateTime.isEmpty()) {
+            features = featureDao.findFeatureByIdAndLabel(partitionid, itemid, label);
+        } else {
+            final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
+            final Instant instantDateTime = offsetDateTime.toInstant();            features = featureDao.FindFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
+        }
 		if (features == null || features.isEmpty() || features.size() < 1) {
 			throw new RuntimeException("No data found");
 		}
