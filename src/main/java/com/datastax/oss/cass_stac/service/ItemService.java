@@ -1,6 +1,7 @@
 package com.datastax.oss.cass_stac.service;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -8,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.datastax.oss.cass_stac.model.ItemModelOut;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
@@ -44,7 +47,7 @@ public class ItemService {
 		itemIdDao.save(itemId);
 	}
 	
-	public ItemModel getItemById(final String id) {
+	public ItemModelOut getItemById(final String id) {
 		final ItemId itemId = itemIdDao.findById(id)
 								.orElseThrow(() -> new RuntimeException(id + " is not found"));
 		final String partitionid = itemId.getPartition_id();
@@ -55,12 +58,24 @@ public class ItemService {
 							.orElseThrow(() -> new RuntimeException("There are no item found for the " + id));
 		final String collection = item.getCollection();
         final ByteBuffer geometryByteBuffer = item.getGeometry();
-        final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
+//        final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
+        final String geometry = StandardCharsets.UTF_8.decode(geometryByteBuffer).toString();
+        /************/
+//        String geometry="";
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        try {
+//            JsonNode jsonNode = objectMapper.readTree(geometry_temp);
+//            geometry = jsonNode.toPrettyString();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+        /************/
         final String propertiesString = item.getProperties();
         final String additionalAttributesString = item.getAdditional_attributes();
 
         try {
-			return new ItemModel((String) id, collection, geometry, propertiesString, additionalAttributesString);
+			return new ItemModelOut((String) id, collection, geometry, propertiesString, additionalAttributesString);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException(e.getLocalizedMessage());
 		} 

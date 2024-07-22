@@ -8,6 +8,7 @@ import com.datastax.oss.cass_stac.dto.FeatureDto;
 import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.model.ItemModel;
 
+import com.datastax.oss.cass_stac.model.ItemModelOut;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,7 +72,7 @@ public class ItemController {
 	@GetMapping
 	public ResponseEntity<?> getItem(@RequestParam final String id) {
 		try {
-			final ItemModel itemModel = itemService.getItemById(id);
+			final ItemModelOut itemModel = itemService.getItemById(id);
 			return new ResponseEntity<>(itemModel, HttpStatus.OK);
 		} catch (Exception ex) {
 			final Map<String, String> message = new HashMap<>();
