@@ -58,24 +58,13 @@ public class ItemService {
 							.orElseThrow(() -> new RuntimeException("There are no item found for the " + id));
 		final String collection = item.getCollection();
         final ByteBuffer geometryByteBuffer = item.getGeometry();
-//        final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
-        final String geometry = StandardCharsets.UTF_8.decode(geometryByteBuffer).toString();
-        /************/
-//        String geometry="";
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        try {
-//            JsonNode jsonNode = objectMapper.readTree(geometry_temp);
-//            geometry = jsonNode.toPrettyString();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
 
-        /************/
         final String propertiesString = item.getProperties();
         final String additionalAttributesString = item.getAdditional_attributes();
 
         try {
-			return new ItemModelOut((String) id, collection, geometry, propertiesString, additionalAttributesString);
+			return new ItemModelOut((String) id, collection, geometry.toString(), propertiesString, additionalAttributesString);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException(e.getLocalizedMessage());
 		} 
