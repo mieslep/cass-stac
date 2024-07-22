@@ -21,7 +21,7 @@ public class Item {
 	private Instant datetime;
 	private ByteBuffer geometry;
 	private Map<String, String> indexed_properties_text;
-	private Map<String, Double> indexed_properties_double;
+	private Map<String, Number> indexed_properties_double;
 	private Map<String, Boolean> indexed_properties_boolean;
 	private Map<String, OffsetDateTime> indexed_properties_timestamp;
 	private String properties;

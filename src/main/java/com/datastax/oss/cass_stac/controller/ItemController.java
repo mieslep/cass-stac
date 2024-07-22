@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.datastax.oss.cass_stac.dto.FeatureDto;
+import com.datastax.oss.cass_stac.dto.ItemDto;
+import com.datastax.oss.cass_stac.model.ItemModel;
+
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.service.ItemService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,7 +36,7 @@ public class ItemController {
 	
 	
 	@Operation(description="POST method to store Feature data")
-	@PostMapping
+	@PostMapping("/add")
 	public ResponseEntity<?> addItem(@RequestBody final ItemDto dto) {
 		
 		final Map<String, String> message = new HashMap<>();
@@ -47,14 +50,29 @@ public class ItemController {
 			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	@Operation(description="POST method to store Feature data")
+	@PostMapping
+	public ResponseEntity<?> saveItem(@RequestBody final String json) {
+		
+		final Map<String, String> message = new HashMap<>();
+		
+		try {
+			message.put("message", "Item Added Suucessful");
+			itemService.save(json);
+			return new ResponseEntity<>(message, HttpStatus.OK);
+		} catch (Exception ex) {
+			message.put("message", ex.getLocalizedMessage());
+			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
 	@Operation(description="Get method to fetch Item data based on Partition id and ID")
 	@GetMapping
-	public ResponseEntity<?> getItem(@RequestParam final String partitionid, @RequestParam(required = false) final String id) {
+	public ResponseEntity<?> getItem(@RequestParam final String id) {
 		try {
-			final List<ItemDto> dto = itemService.getItem(partitionid, id);
-			final Map<String, List<ItemDto>> message = new HashMap<>();
-			message.put("item", dto);
-			return new ResponseEntity<>(dto, HttpStatus.OK);
+			final ItemModel itemModel = itemService.getItemById(id);
+			return new ResponseEntity<>(itemModel, HttpStatus.OK);
 		} catch (Exception ex) {
 			final Map<String, String> message = new HashMap<>();
 			message.put("message", ex.getLocalizedMessage());

@@ -19,7 +19,6 @@ import com.datastax.oss.cass_stac.dto.GeometryDto;
 import com.datastax.oss.cass_stac.entity.Feature;
 import com.datastax.oss.cass_stac.entity.FeaturePrimaryKey;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
-import com.datastax.oss.cass_stac.util.PropertyUtil;
 import com.datastax.oss.driver.api.core.data.CqlVector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -141,6 +140,7 @@ public class FeatureService {
                     throw new RuntimeException("No date time is set");
                 }
 
+                /*
                 Map<String,Boolean> booleanMap = PropertyUtil.getBooleans(properties);
                 Map<String,String> textMap = PropertyUtil.getTexts(properties);
                 Map<String,Double> numberMap = PropertyUtil.getNumbers(properties);
@@ -150,7 +150,7 @@ public class FeatureService {
                 feature.setIndexed_properties_double(numberMap);
                 feature.setIndexed_properties_text(textMap);
 //                feature.setIndexed_properties_timestamp(datetimeMap);
-
+*/
                 final Geometry geometry;
                 try {
                     geometry = GeometryUtil.createGeometryFromDto(geometryDto);

@@ -1,5 +1,6 @@
 package com.datastax.oss.cass_stac.service;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -7,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.datastax.oss.cass_stac.entity.Feature;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
@@ -20,9 +20,11 @@ import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.entity.ItemId;
 import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
+import com.datastax.oss.cass_stac.model.ItemModel;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.cass_stac.util.PropertyUtil;
 import com.datastax.oss.driver.api.core.data.CqlVector;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -33,24 +35,97 @@ public class ItemService {
 	private final ItemDao itemDao;
 	private final ItemIdDao itemIdDao;
 	
+	private static final Map<String, String> propertyIndexMap = PropertyUtil.getPropertyMap("dao.item.property.IndexList");
+	
 	public void add(ItemDto dto) {
 		final Item item = convertItemToDao(dto);
 		final Item it = itemDao.save(item);	
 		final ItemId itemId = createItemId(it);
 		itemIdDao.save(itemId);
 	}
+	
+	public ItemModel getItemById(final String id) {
+		final ItemId itemId = itemIdDao.findById(id)
+								.orElseThrow(() -> new RuntimeException(id + " is not found"));
+		final String partitionid = itemId.getPartition_id();
+		final ItemPrimaryKey pk = new ItemPrimaryKey();
+		pk.setPartition_id(partitionid);
+		pk.setId(id);
+		final Item item = itemDao.findById(pk)
+							.orElseThrow(() -> new RuntimeException("There are no item found for the " + id));
+		final String collection = item.getCollection();
+        final ByteBuffer geometryByteBuffer = item.getGeometry();
+        final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
+        final String propertiesString = item.getProperties();
+        final String additionalAttributesString = item.getAdditional_attributes();
+
+        try {
+			return new ItemModel((String) id, collection, geometry, propertiesString, additionalAttributesString);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e.getLocalizedMessage());
+		} 
+	}
 
     public List<ItemDto> getItem(final String partitionid, final String id) {
         final List<Item> item;
-            if (id == null || id.isEmpty()) {
-                item = itemDao.findItemByPartitionId(partitionid);
-            } else {
-                item = itemDao.findItemByPartitionIdAndId(partitionid, id);
-            }
-            if (item == null || item.isEmpty()){
-                throw new RuntimeException("No data found");
-            }
-            return item.stream().map(this::convertItemToDto).collect(Collectors.toList());
+        if (id == null || id.isEmpty()) {
+            item = itemDao.findItemByPartitionId(partitionid);
+        } else {
+            item = itemDao.findItemByPartitionIdAndId(partitionid, id);
+        }
+        if (item == null || item.isEmpty()){
+            throw new RuntimeException("No data found");
+        }
+        return item.stream().map(this::convertItemToDto).collect(Collectors.toList());
+    }
+    
+    public void save(final String json) {
+
+    	final Item item = converItemJsonToItem(json);
+    	final Item it = itemDao.save(item);	
+		final ItemId itemId = createItemId(it);
+		itemIdDao.save(itemId);
+    	
+    }
+    
+    private Item converItemJsonToItem(final String json) {
+    	final ObjectMapper objectMapper = new ObjectMapper();
+    	try {
+    		
+    		final int geoResolution = 6;
+            final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
+            final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
+    		
+			final ItemModel itemModel = objectMapper.readValue(json, ItemModel.class);
+			final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
+            Point centroid = itemModel.getGeometry().getCentroid();
+            CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
+
+            OffsetDateTime datetime = (OffsetDateTime) (itemModel.getProperties().containsKey("datetime") ? itemModel.getProperties().get("datetime") : itemModel.getProperties().get("start_datetime"));
+            String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
+            String id = itemModel.getId();
+            
+            final ItemPrimaryKey pk = new ItemPrimaryKey();
+            pk.setId(id);
+            pk.setPartition_id(partitionId);
+            
+            final Item item = new Item();
+            
+            item.setId(pk);
+            item.setCollection(itemModel.getCollection());
+            item.setGeometry(GeometryUtil.toByteBuffer(itemModel.getGeometry()));
+            item.setDatetime(datetime.toInstant());
+            item.setCentroid(centroidVector);
+            item.setProperties(itemModel.getPropertiesAsString());
+            item.setAdditional_attributes(itemModel.getAdditionalAttributesAsString());
+            item.setIndexed_properties_boolean(propertyUtil.getIndexedBooleanProps());
+            item.setIndexed_properties_double(propertyUtil.getIndexedNumberProps());
+            item.setIndexed_properties_text(propertyUtil.getIndexedTextProps());
+            item.setIndexed_properties_timestamp(propertyUtil.getIndexedTimestampProps());
+            return item;
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e.getLocalizedMessage());
+		}
     }
     
     public ItemDto getItem(final String id) {
@@ -118,7 +193,8 @@ public class ItemService {
                 
                 item.setDatetime(datetime);
 
-                Map<String,Boolean> booleanMap = PropertyUtil.getBooleans(properties);
+                /*
+                Map<String,Boolean> booleanMap = PropertyUtil.
                 Map<String,String> textMap = PropertyUtil.getTexts(properties);
                 Map<String,Double> numberMap = PropertyUtil.getNumbers(properties);
                 Map<String,OffsetDateTime> datetimeMap = PropertyUtil.getDateTimes(properties);
@@ -127,7 +203,8 @@ public class ItemService {
                 item.setIndexed_properties_double(numberMap);
                 item.setIndexed_properties_text(textMap);
                 item.setIndexed_properties_timestamp(datetimeMap);
-        
+        		*/
+                
                 final Geometry geometry;
                 try {
                         geometry = GeometryUtil.createGeometryFromDto(geometryDto);
