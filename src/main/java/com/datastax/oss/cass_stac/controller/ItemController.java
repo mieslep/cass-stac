@@ -30,25 +30,8 @@ import lombok.RequiredArgsConstructor;
 public class ItemController {
 	
 	private final ItemService itemService;
-	
-	
-	@Operation(description="POST method to store Feature data")
-	@PostMapping("/add")
-	public ResponseEntity<?> addItem(@RequestBody final ItemDto dto) {
-		
-		final Map<String, String> message = new HashMap<>();
-		
-		try {
-			message.put("message", "Item Added Suucessful");
-			itemService.add(dto);
-			return new ResponseEntity<>(message, HttpStatus.OK);
-		} catch (Exception ex) {
-			message.put("message", ex.getLocalizedMessage());
-			return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-	
-	@Operation(description="POST method to store Feature data")
+
+    @Operation(description="POST method to store Feature data")
 	@PostMapping
 	public ResponseEntity<?> saveItem(@RequestBody final String json) {
 		

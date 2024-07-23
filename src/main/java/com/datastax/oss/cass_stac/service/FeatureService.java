@@ -37,47 +37,45 @@ public class FeatureService {
 
         private static final Map<String, String> propertyIndexMap = PropertyUtil.getPropertyMap("dao.feature.property.IndexList");
 
-        public void add(FeatureDto dto) {
-		final Feature feature = convertFeatureToDao(dto);
-        final Feature ft = featureDao.save(feature);
-        final FeatureCollection featureCollection = createFeatureCollection(ft);
-        featureCollectionDao.save(featureCollection);
-        }
-
-        public FeatureModelResponse getFeatureById(final String item_id) {
-                final FeatureCollection featureCollection = featureCollectionDao.findById(item_id)
-                        .orElseThrow(() -> new RuntimeException(item_id + " is not found"));
+        public List<FeatureModelResponse> getFeatureByItemId(final String itemId, String label, String dateTime) {
+                final FeatureCollection featureCollection = featureCollectionDao.findById(itemId)
+                        .orElseThrow(() -> new RuntimeException(itemId + " is not found"));
                 final String partitionId = featureCollection.getPartition_id();
                 final FeaturePrimaryKey pk = new FeaturePrimaryKey();
                 pk.setPartition_id(partitionId);
-                pk.setItem_id(item_id);
-                final Feature feature = featureDao.findFeatureByPartitionIdAndId(partitionId, item_id).stream().findFirst().get();
+                pk.setItem_id(itemId);
+                List<Feature> feature ;
+                if ((label == null || label.isEmpty()) && (dateTime == null || dateTime.isEmpty())) {
+                        feature = featureDao.findFeatureByPartitionIdAndId(partitionId, itemId);
+                }
+                else if (dateTime == null || dateTime.isEmpty()) {
+                        feature = featureDao.findFeatureByIdAndLabel(partitionId, itemId, label);
+                }
+                else {
+                        final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
+                        final Instant instantDateTime = offsetDateTime.toInstant();
+                        feature = featureDao.findFeatureByIdLabelAndDate(partitionId, itemId, label, instantDateTime);
+                }
+
+            return feature.stream().map(this::convertToResponse).collect(Collectors.toList());
+        }
+
+        private FeatureModelResponse convertToResponse(Feature feature) {
+                final String item_id = feature.getId().getItem_id();
                 final String label = feature.getId().getLabel();
+                final String propeties_String = feature.getProperties();
+                final String additional_attributes = feature.getAdditional_attributes();
                 final ByteBuffer geometryByteBuffer = feature.getGeometry();
                 final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
 
-                final String propertiesString = feature.getProperties();
-                final String additionalAttributesString = feature.getAdditional_attributes();
-
-                try {
-                        return new FeatureModelResponse((String) item_id, label, geometry.toString(), propertiesString, additionalAttributesString);
-                } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e.getLocalizedMessage());
+            FeatureModelResponse response = null;
+            try {
+                response = new FeatureModelResponse(item_id, label, geometry.toString(), propeties_String, additional_attributes);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+                return response;
                 }
-        }
-
-        public List<FeatureDto> getFeature(final String partitionid, final String item_id) {
-                final List<Feature> feature;
-                if (item_id == null || item_id.isEmpty()) {
-                        feature = featureDao.findFeatureByPartitionId(partitionid);
-                } else {
-                        feature = featureDao.findFeatureByPartitionIdAndId(partitionid, item_id);
-                }
-                if (feature == null || feature.isEmpty()){
-                        throw new RuntimeException("No data found");
-                }
-                return feature.stream().map(this::convertFeatureToDto).collect(Collectors.toList());
-        }
 
         public void save(final String json) {
 
@@ -85,13 +83,11 @@ public class FeatureService {
                 final Feature ft = featureDao.save(feature);
                 final FeatureCollection featureCollection = createFeatureCollection(ft);
                 featureCollectionDao.save(featureCollection);
-
         }
 
         private Feature converFeatureJsonToFeature(final String json) {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 try {
-
                         final int geoResolution = 6;
                         final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
                         final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
@@ -128,35 +124,6 @@ public class FeatureService {
                 }
         }
 
-        public List<FeatureDto> getFeature(final String partitionid,
-                                           final String itemid,
-                                           final String label,
-                                           final String dateTime) {
-                final List<Feature> features;
-
-                if ((label == null || label.isEmpty()) && (dateTime == null || dateTime.isEmpty())) {
-                        features = featureDao.findFeatureById(partitionid, itemid);
-                } else if (dateTime == null || dateTime.isEmpty()) {
-                        features = featureDao.findFeatureByIdAndLabel(partitionid, itemid, label);
-                } else {
-                        final OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateTime);
-                        final Instant instantDateTime = offsetDateTime.toInstant();
-                        features = featureDao.findFeatureByIdLabelAndDate(partitionid, itemid, label, instantDateTime);
-                }
-                if (features == null || features.isEmpty() || features.size() < 1) {
-                        throw new RuntimeException("No data found");
-                }
-
-                return features.stream().map(this::convertFeatureToDto).collect(Collectors.toList());
-
-        }
-
-        public FeatureCollection getFeatureId(final String item_id) {
-                final FeatureCollection featureCollection = featureCollectionDao.findById(item_id)
-                        .orElseThrow(() -> new RuntimeException("No data found for selected item id"));
-                return featureCollection;
-        }
-
         private FeatureCollection createFeatureCollection(final Feature ft) {
                 final String item_id = ft.getId().getItem_id();
                 final String partition_id = ft.getId().getPartition_id();
@@ -179,62 +146,4 @@ public class FeatureService {
                         .additional_attributes(feature.getAdditional_attributes())
                         .build();
         }
-
-	private Feature convertFeatureToDao(FeatureDto dto)  {
-		final Feature feature = new Feature();
-
-                final int geoResolution = 6;
-                final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
-                final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
-        
-                final Map<String, Object> properties = dto.getProperties();
-                if (properties == null || properties.size() < 1 || properties.isEmpty()) {
-                    throw new RuntimeException("There are no properties set.");
-                }
-                final GeometryDto geometryDto = dto.getGeometry();
-                if (geometryDto == null) {
-                    throw new RuntimeException("There are no Geomentry set.");
-                }
-                final String dateTime = (String) (properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime"));
-                final Instant datetime = Instant.parse(dateTime);
-                final OffsetDateTime offDatetime = OffsetDateTime.parse(dateTime) ;
-
-                if (datetime == null) {
-                    throw new RuntimeException("No date time is set");
-                }
-
-                final Geometry geometry;
-                try {
-                    geometry = GeometryUtil.createGeometryFromDto(geometryDto);
-                } catch (IllegalArgumentException e) {
-                    throw new RuntimeException(e.getLocalizedMessage());
-                }
-
-                final Point centroid = geometry.getCentroid();
-                CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
-
-                String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, offDatetime);
-                final String id = dto.getId();
-        
-                final FeaturePrimaryKey pk = new FeaturePrimaryKey();
-                pk.setItem_id(id);
-                pk.setPartition_id(partitionId);
-                pk.setDatetime(datetime);
-                pk.setCentroid(centroidVector);
-                pk.setLabel(dto.getLabel());
-                feature.setId(pk);
-
-                feature.setGeometry(GeometryUtil.toByteBuffer(geometry));
-
-                feature.setAdditional_attributes(dto.getAdditional_attributes());
-                final String propertiesText;
-                try {
-                    propertiesText = new ObjectMapper().writeValueAsString(dto.getProperties());
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex.getLocalizedMessage());
-                }
-                feature.setProperties(propertiesText);
-
-                return feature;
-	}
 }

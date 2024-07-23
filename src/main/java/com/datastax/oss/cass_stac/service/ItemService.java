@@ -33,28 +33,21 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ItemService {
-	private final ItemDao itemDao;
-	private final ItemIdDao itemIdDao;
-	
-	private static final Map<String, String> propertyIndexMap = PropertyUtil.getPropertyMap("dao.item.property.IndexList");
-	
-	public void add(ItemDto dto) {
-		final Item item = convertItemToDao(dto);
-		final Item it = itemDao.save(item);	
-		final ItemId itemId = createItemId(it);
-		itemIdDao.save(itemId);
-	}
-	
-	public ItemModelResponse getItemById(final String id) {
-		final ItemId itemId = itemIdDao.findById(id)
-								.orElseThrow(() -> new RuntimeException(id + " is not found"));
-		final String partitionid = itemId.getPartition_id();
-		final ItemPrimaryKey pk = new ItemPrimaryKey();
-		pk.setPartition_id(partitionid);
-		pk.setId(id);
-		final Item item = itemDao.findById(pk)
-							.orElseThrow(() -> new RuntimeException("There are no item found for the " + id));
-		final String collection = item.getCollection();
+    private final ItemDao itemDao;
+    private final ItemIdDao itemIdDao;
+
+    private static final Map<String, String> propertyIndexMap = PropertyUtil.getPropertyMap("dao.item.property.IndexList");
+
+    public ItemModelResponse getItemById(final String id) {
+        final ItemId itemId = itemIdDao.findById(id)
+                .orElseThrow(() -> new RuntimeException(id + " is not found"));
+        final String partitionId = itemId.getPartition_id();
+        final ItemPrimaryKey pk = new ItemPrimaryKey();
+        pk.setPartition_id(partitionId);
+        pk.setId(id);
+        final Item item = itemDao.findById(pk)
+                .orElseThrow(() -> new RuntimeException("There are no item found for the " + id));
+        final String collection = item.getCollection();
         final ByteBuffer geometryByteBuffer = item.getGeometry();
         final Geometry geometry = GeometryUtil.fromGeometryByteBuffer(geometryByteBuffer);
 
@@ -62,57 +55,41 @@ public class ItemService {
         final String additionalAttributesString = item.getAdditional_attributes();
 
         try {
-			return new ItemModelResponse((String) id, collection, geometry.toString(), propertiesString, additionalAttributesString);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e.getLocalizedMessage());
-		} 
-	}
-
-    public List<ItemDto> getItem(final String partitionid, final String id) {
-        final List<Item> item;
-        if (id == null || id.isEmpty()) {
-            item = itemDao.findItemByPartitionId(partitionid);
-        } else {
-            item = itemDao.findItemByPartitionIdAndId(partitionid, id);
+            return new ItemModelResponse((String) id, collection, geometry.toString(), propertiesString, additionalAttributesString);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e.getLocalizedMessage());
         }
-        if (item == null || item.isEmpty()){
-            throw new RuntimeException("No data found");
-        }
-        return item.stream().map(this::convertItemToDto).collect(Collectors.toList());
     }
-    
+
     public void save(final String json) {
-
-    	final Item item = converItemJsonToItem(json);
-    	final Item it = itemDao.save(item);	
-		final ItemId itemId = createItemId(it);
-		itemIdDao.save(itemId);
-    	
+        final Item item = converItemJsonToItem(json);
+        final Item it = itemDao.save(item);
+        final ItemId itemId = createItemId(it);
+        itemIdDao.save(itemId);
     }
-    
+
     private Item converItemJsonToItem(final String json) {
-    	final ObjectMapper objectMapper = new ObjectMapper();
-    	try {
-    		
-    		final int geoResolution = 6;
+        final ObjectMapper objectMapper = new ObjectMapper();
+        try {
+
+            final int geoResolution = 6;
             final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
             final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
-    		
-			final ItemModelRequest itemModel = objectMapper.readValue(json, ItemModelRequest.class);
-			final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
+
+            final ItemModelRequest itemModel = objectMapper.readValue(json, ItemModelRequest.class);
+            final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
             Point centroid = itemModel.getGeometry().getCentroid();
             CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
 
             OffsetDateTime datetime = (OffsetDateTime) (itemModel.getProperties().containsKey("datetime") ? itemModel.getProperties().get("datetime") : itemModel.getProperties().get("start_datetime"));
             String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
             String id = itemModel.getId();
-            
             final ItemPrimaryKey pk = new ItemPrimaryKey();
+
             pk.setId(id);
             pk.setPartition_id(partitionId);
-            
+
             final Item item = new Item();
-            
             item.setId(pk);
             item.setCollection(itemModel.getCollection());
             item.setGeometry(GeometryUtil.toByteBuffer(itemModel.getGeometry()));
@@ -125,107 +102,48 @@ public class ItemService {
             item.setIndexed_properties_text(propertyUtil.getIndexedTextProps());
             item.setIndexed_properties_timestamp(propertyUtil.getIndexedTimestampProps());
             return item;
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e.getLocalizedMessage());
-		}
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e.getLocalizedMessage());
+        }
     }
-    
+
     public ItemDto getItem(final String id) {
-    	final ItemId itemId = getItemId(id);
+        final ItemId itemId = getItemId(id);
 
         final ItemPrimaryKey itemPrimaryKey = new ItemPrimaryKey();
         itemPrimaryKey.setId(id);
         itemPrimaryKey.setPartition_id(itemId.getPartition_id());
         final Item item = itemDao.findById(itemPrimaryKey)
-                                .orElseThrow(() -> new RuntimeException("No data found"));
+                .orElseThrow(() -> new RuntimeException("No data found"));
         final ItemDto itemDto = convertItemToDto(item);
         return itemDto;
     }
 
     public ItemId getItemId(final String id) {
-    	final ItemId itemId = itemIdDao.findById(id)
-    		.orElseThrow(() -> new RuntimeException("No data found for selected id"));
-    	return itemId;
+        final ItemId itemId = itemIdDao.findById(id)
+                .orElseThrow(() -> new RuntimeException("No data found for selected id"));
+        return itemId;
     }
-    
+
     private ItemId createItemId(final Item it) {
-    	final String id = it.getId().getId();
-		final Instant datetime = it.getDatetime();
-		final String partition_id = it.getId().getPartition_id();
-		final ItemId itemId = new ItemId();
-		itemId.setDatetime(datetime);
-		itemId.setId(id);
-		itemId.setPartition_id(partition_id);
-		return itemId;
-
+        final String id = it.getId().getId();
+        final Instant datetime = it.getDatetime();
+        final String partition_id = it.getId().getPartition_id();
+        final ItemId itemId = new ItemId();
+        itemId.setDatetime(datetime);
+        itemId.setId(id);
+        itemId.setPartition_id(partition_id);
+        return itemId;
     }
-    
+
     private ItemDto convertItemToDto(final Item item) {
-            return ItemDto.builder()
-                    .id(item.getId().getId())
-                    .partition_id(item.getId().getPartition_id())
-                    .collection(item.getCollection())
-                    .additional_attributes(item.getAdditional_attributes())
-                    //.properties(item.getProperties())
-                    .build();
+        return ItemDto.builder()
+                .id(item.getId().getId())
+                .partition_id(item.getId().getPartition_id())
+                .collection(item.getCollection())
+                .additional_attributes(item.getAdditional_attributes())
+                //.properties(item.getProperties())
+                .build();
     }
-	
-	private Item convertItemToDao(ItemDto dto)  {
-                final Item item = new Item();
-                        
-                final int geoResolution = 6;
-                final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
-                final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
-        
-                final Map<String, Object> properties = dto.getProperties();
-                if (properties == null || properties.size() < 1 || properties.isEmpty()) {
-                	throw new RuntimeException("There are no properties set.");
-                }
-                final GeometryDto geometryDto = dto.getGeometry();
-                if (geometryDto == null) {
-                	throw new RuntimeException("There are no Geomentry set.");
-                }
-                final String dateTime = (String) (properties.containsKey("datetime") ? properties.get("datetime") : properties.get("start_datetime"));
-                final Instant datetime = Instant.parse(dateTime);
-                final OffsetDateTime offDatetime = (OffsetDateTime.parse(dateTime)) ;
-                
-                if (datetime == null) {
-                	throw new RuntimeException("No date time is set");
-                }
-                
-                item.setDatetime(datetime);
-
-                final Geometry geometry;
-                try {
-                        geometry = GeometryUtil.createGeometryFromDto(geometryDto);
-                } catch (IllegalArgumentException e) {
-                        throw new RuntimeException(e.getLocalizedMessage());
-                }
-                
-                final Point centroid = geometry.getCentroid();
-                CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
-                item.setCentroid(centroidVector);
-
-                String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, offDatetime);
-                final String id = dto.getId();
-
-                final ItemPrimaryKey pk = new ItemPrimaryKey();
-                pk.setId(id);
-                pk.setPartition_id(partitionId);
-                item.setId(pk);
-
-                item.setGeometry(GeometryUtil.toByteBuffer(geometry));
-                
-                item.setCollection(dto.getCollection());
-                item.setAdditional_attributes(dto.getAdditional_attributes());
-                final String propertiesText;
-                try {
-                        propertiesText = new ObjectMapper().writeValueAsString(dto.getProperties());
-                } catch (Exception ex) {
-                        throw new RuntimeException(ex.getLocalizedMessage());
-                }
-                item.setProperties(propertiesText);
-                return item;
-        }
 
 }

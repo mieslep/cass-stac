@@ -7,29 +7,29 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.HashSet;
 import java.util.Objects;
 
-public class FeatureModelResponse extends GeoJsonItemResponse {
+public class FeatureModelResponse extends GeoJsonFeatureResponse {
 
-    @JsonProperty("collection")
-    private String collection;
+    @JsonProperty("label")
+    private String label;
 
     public FeatureModelResponse() {
         super();
         constructorInit();
     }
 
-    public FeatureModelResponse(String id, String collection, String geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
+    public FeatureModelResponse(String item_id, String label, String geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
         super(geometry, propertiesString, additionalAttributes);
         constructorInit();
-        setId(id);
-        setCollection(collection);
+        setItem_id(item_id);
+        setLabel(label);
     }
 
-    public String getCollection() {
-        return collection;
+    public String getLabel() {
+        return label;
     }
 
-    public void setCollection(String collection) {
-        this.collection = collection;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     private void constructorInit() {
@@ -42,7 +42,7 @@ public class FeatureModelResponse extends GeoJsonItemResponse {
 
     protected ObjectNode toObjectNode() {
         ObjectNode node = super.toObjectNode();
-        node.put("collection", this.collection);
+        node.put("label", this.label);
         return node;
     }
 
@@ -52,12 +52,12 @@ public class FeatureModelResponse extends GeoJsonItemResponse {
         if (this == o) return true;
         if (getClass() != o.getClass()) return false;
         FeatureModelResponse item = (FeatureModelResponse) o;
-        return Objects.equals(collection, item.collection);
+        return Objects.equals(label, item.label);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), collection);
+        return Objects.hash(super.hashCode(), label);
     }
 
 }
