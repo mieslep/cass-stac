@@ -8,17 +8,17 @@ import org.locationtech.jts.geom.Geometry;
 import java.util.HashSet;
 import java.util.Objects;
 
-public class ItemModelOut extends GeoJsonFeatureOut {
+public class ItemModelRequest extends GeoJsonItemRequest {
 
     @JsonProperty("collection")
     private String collection;
 
-    public ItemModelOut() {
+    public ItemModelRequest() {
         super();
         constructorInit();
     }
 
-    public ItemModelOut(String id, String collection, String geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
+    public ItemModelRequest(String id, String collection, Geometry geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
         super(geometry, propertiesString, additionalAttributes);
         constructorInit();
         setId(id);
@@ -52,7 +52,7 @@ public class ItemModelOut extends GeoJsonFeatureOut {
         if (!super.equals(o)) return false;
         if (this == o) return true;
         if (getClass() != o.getClass()) return false;
-        ItemModelOut item = (ItemModelOut) o;
+        ItemModelRequest item = (ItemModelRequest) o;
         return Objects.equals(collection, item.collection);
     }
 

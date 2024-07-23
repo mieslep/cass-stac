@@ -22,4 +22,11 @@ public interface FeatureDao extends  CassandraRepository<Feature, FeaturePrimary
 
 	@Query(value = "SELECT * FROM feature WHERE partition_id = :partition_id AND item_id = :item_id AND label = :label")
 	List<Feature> findFeatureByIdAndLabel(@Param("partition_id") String partitionId, @Param("item_id") String itemId, @Param("label") String label);
+
+	@Query(value = "SELECT * FROM feature WHERE partition_id = :partition_id AND item_id = :item_id")
+	List<Feature> findFeatureByPartitionIdAndId(@Param("partition_id") String partitionId, @Param("item_id") String itemId);
+
+	@Query(value = "SELECT * FROM feature WHERE partition_id = :partition_id")
+	List<Feature> findFeatureByPartitionId(@Param("partition_id") String partitionId);
+
 }

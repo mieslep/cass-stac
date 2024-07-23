@@ -3,15 +3,13 @@ package com.datastax.oss.cass_stac.model;
 import com.datastax.oss.cass_stac.config.ConfigManager;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.locationtech.jts.geom.Geometry;
 import org.n52.jackson.datatype.jts.JtsModule;
 
 import java.util.Map;
 import java.util.Objects;
 
-public class GeoJsonFeatureOut extends PropertyObject {
+public class GeoJsonFeatureResponse extends PropertyObject {
 
     @JsonProperty("type")
     private static final String TYPE = "Feature";
@@ -21,28 +19,28 @@ public class GeoJsonFeatureOut extends PropertyObject {
         objectMapper.registerModule(new JtsModule(ConfigManager.getInstance().getIntProperty("geojson.coordinateDecimalPlaces", 16)));
     }
 
-    @JsonProperty("id")
-    private String id;
+    @JsonProperty("item_id")
+    private String item_id;
 
     @JsonProperty("geometry")
     private String geometry;
 
-    public GeoJsonFeatureOut() {
+    public GeoJsonFeatureResponse() {
         super();
     }
 
-    public GeoJsonFeatureOut(String geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
+    public GeoJsonFeatureResponse(String geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
         super(propertiesString, additionalAttributes);
         this.geometry = geometry;
     }
 
-    public GeoJsonFeatureOut(String geometry, Map<String, Object> properties) {
+    public GeoJsonFeatureResponse(String geometry, Map<String, Object> properties) {
         super();
         this.geometry = geometry;
         setProperties(properties);
     }
 
-    public GeoJsonFeatureOut(String geometry) {
+    public GeoJsonFeatureResponse(String geometry) {
         this(geometry, null);
     }
 
@@ -50,12 +48,12 @@ public class GeoJsonFeatureOut extends PropertyObject {
         return TYPE;
     }
 
-    public String getId() {
-        return id;
+    public String getItem_id() {
+        return item_id;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setItem_id(String item_id) {
+        this.item_id = item_id;
     }
 
     public String getGeometry() {
@@ -65,7 +63,7 @@ public class GeoJsonFeatureOut extends PropertyObject {
     @Override
     protected ObjectNode toObjectNode() {
         ObjectNode node = super.toObjectNode();
-        node.put("id", id);
+        node.put("item_id", item_id);
         node.set("geometry", objectMapper.valueToTree(geometry));
         return node;
     }
@@ -75,12 +73,12 @@ public class GeoJsonFeatureOut extends PropertyObject {
         if (this == o) return true;
         if (!super.equals(o)) return false;
         if (getClass() != o.getClass()) return false;
-        GeoJsonFeatureOut that = (GeoJsonFeatureOut) o;
-        return Objects.equals(id, that.id) && Objects.equals(geometry, that.geometry);
+        GeoJsonFeatureResponse that = (GeoJsonFeatureResponse) o;
+        return Objects.equals(item_id, that.item_id) && Objects.equals(geometry, that.geometry);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), id, geometry);
+        return Objects.hash(super.hashCode(), item_id, geometry);
     }
 }

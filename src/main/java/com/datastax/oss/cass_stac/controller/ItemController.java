@@ -1,15 +1,11 @@
 package com.datastax.oss.cass_stac.controller;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import com.datastax.oss.cass_stac.dto.FeatureDto;
 import com.datastax.oss.cass_stac.dto.ItemDto;
-import com.datastax.oss.cass_stac.model.ItemModel;
 
-import com.datastax.oss.cass_stac.model.ItemModelOut;
-import org.springframework.http.HttpEntity;
+import com.datastax.oss.cass_stac.model.ItemModelResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -72,7 +68,7 @@ public class ItemController {
 	@GetMapping
 	public ResponseEntity<?> getItem(@RequestParam final String id) {
 		try {
-			final ItemModelOut itemModel = itemService.getItemById(id);
+			final ItemModelResponse itemModel = itemService.getItemById(id);
 			return new ResponseEntity<>(itemModel, HttpStatus.OK);
 		} catch (Exception ex) {
 			final Map<String, String> message = new HashMap<>();

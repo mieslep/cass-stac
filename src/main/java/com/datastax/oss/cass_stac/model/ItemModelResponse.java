@@ -3,22 +3,21 @@ package com.datastax.oss.cass_stac.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.locationtech.jts.geom.Geometry;
 
 import java.util.HashSet;
 import java.util.Objects;
 
-public class ItemModel extends GeoJsonFeature {
+public class ItemModelResponse extends GeoJsonItemResponse {
 
     @JsonProperty("collection")
     private String collection;
 
-    public ItemModel() {
+    public ItemModelResponse() {
         super();
         constructorInit();
     }
 
-    public ItemModel(String id, String collection, Geometry geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
+    public ItemModelResponse(String id, String collection, String geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
         super(geometry, propertiesString, additionalAttributes);
         constructorInit();
         setId(id);
@@ -52,7 +51,7 @@ public class ItemModel extends GeoJsonFeature {
         if (!super.equals(o)) return false;
         if (this == o) return true;
         if (getClass() != o.getClass()) return false;
-        ItemModel item = (ItemModel) o;
+        ItemModelResponse item = (ItemModelResponse) o;
         return Objects.equals(collection, item.collection);
     }
 

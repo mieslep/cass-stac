@@ -1,18 +1,17 @@
 package com.datastax.oss.cass_stac.model;
 
-import java.util.Map;
-import java.util.Objects;
-
-import org.locationtech.jts.geom.Geometry;
-import org.n52.jackson.datatype.jts.JtsModule;
-
 import com.datastax.oss.cass_stac.config.ConfigManager;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.locationtech.jts.geom.Geometry;
+import org.n52.jackson.datatype.jts.JtsModule;
 
-public class GeoJsonFeature extends PropertyObject {
+import java.util.Map;
+import java.util.Objects;
+
+public class GeoJsonItemRequest extends PropertyObject {
 
     @JsonProperty("type")
     private static final String TYPE = "Feature";
@@ -21,29 +20,29 @@ public class GeoJsonFeature extends PropertyObject {
     static {
         objectMapper.registerModule(new JtsModule(ConfigManager.getInstance().getIntProperty("geojson.coordinateDecimalPlaces", 16)));
     }
-    
+
     @JsonProperty("id")
     private String id;
 
     @JsonProperty("geometry")
     private Geometry geometry;
 
-    public GeoJsonFeature() {
+    public GeoJsonItemRequest() {
         super();
     }
 
-    public GeoJsonFeature(Geometry geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
+    public GeoJsonItemRequest(Geometry geometry, String propertiesString, String additionalAttributes) throws JsonProcessingException {
         super(propertiesString, additionalAttributes);
         this.geometry = geometry;
     }
 
-    public GeoJsonFeature(Geometry geometry, Map<String, Object> properties) {
+    public GeoJsonItemRequest(Geometry geometry, Map<String, Object> properties) {
         super();
         this.geometry = geometry;
         setProperties(properties);
     }
 
-    public GeoJsonFeature(Geometry geometry) {
+    public GeoJsonItemRequest(Geometry geometry) {
         this(geometry, null);
     }
 
@@ -80,7 +79,7 @@ public class GeoJsonFeature extends PropertyObject {
         if (this == o) return true;
         if (!super.equals(o)) return false;
         if (getClass() != o.getClass()) return false;
-        GeoJsonFeature that = (GeoJsonFeature) o;
+        GeoJsonItemRequest that = (GeoJsonItemRequest) o;
         return Objects.equals(id, that.id) && Objects.equals(geometry, that.geometry);
     }
 
