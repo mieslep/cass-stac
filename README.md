@@ -6,6 +6,7 @@ a [Spatio-Temporal Asset Catalog (STAC)](https://stacspec.org/en) that can scale
 ![img.png](img/img.png)
 
 ## Objectives
+
 Run a REST API that connects to DataStax Astra DB
 
 ## How this works
@@ -19,13 +20,13 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 
 ### Prerequisites
 
-[//]: # (TODO why astra cli?)
-
 1. Download the Astra CLI:
    ```curl -Ls "https://dtsx.io/get-astra-cli" | bash ```
-2. Install the Python version you need for CQLSH: Python2.7+ or Python 3.6+
-3. Download CQLSH
-   ```
+2. \[Optional] Download CQLSH to be able to query the DB from the command line
+
+   Install the Python version you need for CQLSH: Python2.7+ or Python 3.6+
+
+```
    curl -O -L https://downloads.datastax.com/enterprise/cqlsh-astra.tar.gz
    curl -O  https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.tar.gz
    tar xvfz cqlsh-astra.tar.gz
@@ -34,7 +35,8 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
    export CQLSH_PATH=~/cqlsh-astra/
    export PATH=${CQLSH_PATH}/bin:${PATH} >> ~/.bashrc
    ```
-4. [Setup Datastax Astra DB](#DataStax-Astra)
+
+3. [Setup Datastax Astra DB](#DataStax-Astra)
 
 ### DataStax Astra
 
@@ -53,20 +55,30 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 
 5. Generate a token by clicking `Generate Token` and give it a name.
    ![image](img/05.png)
-
 6. After you have your Application Token, head to the database connect screen and select the driver connection that we
    need. Go ahead and download the `Secure Bundle` for the driver.
-   ![image](img/06.png)
+
+   The bundle might be downloaded as well using the astra-cli:
+   ```
+   astra db download-scb cass5-stac
+   astra db download-scb cass5-stac
+   mv <filename> secure-connect-cass5-stac.zip
+   ```
+
+![image](img/06.png)
 
 [//]: # (## 🚀 Getting Started Paths:)
 
 [//]: # ()
+
 [//]: # (*Make sure you've completed the [prerequisites]&#40;#prerequisites&#41; before starting this step*)
 
 [//]: # ()
+
 [//]: # (- [Running on Gitpod]&#40;#running-on-gitpod&#41;)
 
 [//]: # ()
+
 [//]: # (### Running on Gitpod)
 
 ### Local Setup
@@ -92,3 +104,11 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
    mvn spring-boot:run
    ```   
 4. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API
+5. \[Optional] Connect to the DB from the command line
+
+```
+$CQLSH_PATH/bin/cqlsh \
+-u token \
+-p <password> \
+-b ./secure-connect-cass5-stac.zip
+```
