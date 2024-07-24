@@ -1,22 +1,23 @@
 package com.datastax.oss.cass_stac.service;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
+import com.datastax.oss.cass_stac.util.GeoJsonParser;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.datastax.oss.cass_stac.dao.GeoTimePartition;
 import com.datastax.oss.cass_stac.dao.ItemDao;
 import com.datastax.oss.cass_stac.dao.ItemIdDao;
-import com.datastax.oss.cass_stac.dto.GeometryDto;
 import com.datastax.oss.cass_stac.dto.ItemDto;
 import com.datastax.oss.cass_stac.entity.Item;
 import com.datastax.oss.cass_stac.entity.ItemId;
@@ -26,7 +27,6 @@ import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.cass_stac.util.PropertyUtil;
 import com.datastax.oss.driver.api.core.data.CqlVector;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class ItemService {
     private final ItemDao itemDao;
     private final ItemIdDao itemIdDao;
-
+    private static final Logger logger = LoggerFactory.getLogger(ItemService.class);
     private static final Map<String, String> propertyIndexMap = PropertyUtil.getPropertyMap("dao.item.property.IndexList");
 
     public ItemModelResponse getItemById(final String id) {
@@ -61,50 +61,65 @@ public class ItemService {
         }
     }
 
-    public void save(final String json) {
-        final Item item = converItemJsonToItem(json);
+    public void save(ItemModelRequest itemModelRequest) {
+        logger.debug("Saving itemModelRequest: " + itemModelRequest);
+        if (itemModelRequest.getProperties() == null) {
+            logger.error("ItemModelRequest properties are null!");
+        } else {
+            logger.debug("ItemModelRequest properties: " + itemModelRequest.getProperties());
+        }
+        final Item item = convertItemModelRequestToItem(itemModelRequest);
         final Item it = itemDao.save(item);
         final ItemId itemId = createItemId(it);
         itemIdDao.save(itemId);
     }
 
-    private Item converItemJsonToItem(final String json) {
-        final ObjectMapper objectMapper = new ObjectMapper();
+    public void saveGeoJson(String geoJson) {
         try {
+            logger.debug("Saving GeoJSON content.");
+            ItemModelRequest itemModelRequest = GeoJsonParser.parseGeoJsonContent(geoJson);
+            logger.debug("GeoJSON content parsed: " + itemModelRequest);
+            save(itemModelRequest);
+        } catch (IOException e) {
+            logger.error("Failed to parse or save the GeoJSON item.", e);
+            throw new RuntimeException("Failed to parse or save the GeoJSON item.", e);
+        }
+    }
 
-            final int geoResolution = 6;
-            final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
-            final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
+    private Item convertItemModelRequestToItem(final ItemModelRequest itemModel) {
+        final int geoResolution = 6;
+        final GeoTimePartition.TimeResolution timeResolution = GeoTimePartition.TimeResolution.valueOf("MONTH");
+        final GeoTimePartition partitioner = new GeoTimePartition(geoResolution, timeResolution);
+        final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
+        Point centroid = itemModel.getGeometry().getCentroid();
+        CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
 
-            final ItemModelRequest itemModel = objectMapper.readValue(json, ItemModelRequest.class);
-            final PropertyUtil propertyUtil = new PropertyUtil(propertyIndexMap, itemModel);
-            Point centroid = itemModel.getGeometry().getCentroid();
-            CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
+        OffsetDateTime datetime = (OffsetDateTime) (itemModel.getProperties().containsKey("datetime") ? itemModel.getProperties().get("datetime") : itemModel.getProperties().get("start_datetime"));
+        String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
+        String id = itemModel.getId();
+        final ItemPrimaryKey pk = new ItemPrimaryKey();
 
-            OffsetDateTime datetime = (OffsetDateTime) (itemModel.getProperties().containsKey("datetime") ? itemModel.getProperties().get("datetime") : itemModel.getProperties().get("start_datetime"));
-            String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
-            String id = itemModel.getId();
-            final ItemPrimaryKey pk = new ItemPrimaryKey();
+        pk.setId(id);
+        pk.setPartition_id(partitionId);
 
-            pk.setId(id);
-            pk.setPartition_id(partitionId);
-
-            final Item item = new Item();
-            item.setId(pk);
-            item.setCollection(itemModel.getCollection());
-            item.setGeometry(GeometryUtil.toByteBuffer(itemModel.getGeometry()));
-            item.setDatetime(datetime.toInstant());
-            item.setCentroid(centroidVector);
+        final Item item = new Item();
+        item.setId(pk);
+        item.setCollection(itemModel.getCollection());
+        item.setGeometry(GeometryUtil.toByteBuffer(itemModel.getGeometry()));
+        item.setDatetime(datetime.toInstant());
+        item.setCentroid(centroidVector);
+        try {
             item.setProperties(itemModel.getPropertiesAsString());
             item.setAdditional_attributes(itemModel.getAdditionalAttributesAsString());
-            item.setIndexed_properties_boolean(propertyUtil.getIndexedBooleanProps());
-            item.setIndexed_properties_double(propertyUtil.getIndexedNumberProps());
-            item.setIndexed_properties_text(propertyUtil.getIndexedTextProps());
-            item.setIndexed_properties_timestamp(propertyUtil.getIndexedTimestampProps());
-            return item;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e.getLocalizedMessage());
+            logger.error("Failed to convert properties to string.", e);
+            throw new RuntimeException("Failed to convert properties to string.", e);
         }
+        item.setIndexed_properties_boolean(propertyUtil.getIndexedBooleanProps());
+        item.setIndexed_properties_double(propertyUtil.getIndexedNumberProps());
+        item.setIndexed_properties_text(propertyUtil.getIndexedTextProps());
+        item.setIndexed_properties_timestamp(propertyUtil.getIndexedTimestampProps());
+        return item;
     }
 
     public ItemDto getItem(final String id) {
@@ -142,8 +157,6 @@ public class ItemService {
                 .partition_id(item.getId().getPartition_id())
                 .collection(item.getCollection())
                 .additional_attributes(item.getAdditional_attributes())
-                //.properties(item.getProperties())
                 .build();
     }
-
 }
