@@ -1,42 +1,112 @@
-# Setup
-## Upload secure connect bundle under CASS-STAC folder
-## Updated cassandra connection details in config.properties
+# STAC on Cassandra
 
-## Updated build section in pom.xml as below
+The application uses Spring Data Cassandra and DataStax Astra DB to build a REST API for
+a [Spatio-Temporal Asset Catalog (STAC)](https://stacspec.org/en) that can scale to hundreds of billions of STAC items.
 
-<build>
-    <plugins>
-      <plugin>
-        <inherited>true</inherited>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.10.1</version>
-        <configuration>
-          <source>17</source>
-          <target>17</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.1.1</version>
-        <configuration>
-            <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-            </descriptorRefs>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-</build>
+![img.png](img/img.png)
 
-## execute below command to run application
-java -cp target/cass-stac-0.1-SNAPSHOT-jar-with-dependencies.jar com.datastax.oss.cass_stac.App
+## Objectives
+
+Run a REST API that connects to DataStax Astra DB
+
+## How this works
+
+We're using Spring Data Cassandra and Datastax Astra DB to build a REST API that stores STAC items and features.
+
+## Getting Started
+
+To build and play with this app, follow the build instructions that are located
+here: [https://github.com/Anant/cass-stac](#prerequisites)
+
+### Prerequisites
+
+1. Download the Astra CLI:
+   ```curl -Ls "https://dtsx.io/get-astra-cli" | bash ```
+2. \[Optional] Download CQLSH to be able to query the DB from the command line
+
+   Install the Python version you need for CQLSH: Python2.7+ or Python 3.6+
+
+```
+   curl -O -L https://downloads.datastax.com/enterprise/cqlsh-astra.tar.gz
+   curl -O  https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.tar.gz
+   tar xvfz cqlsh-astra.tar.gz
+   tar xvfz cqlsh-astra-20221114-bin.tar.gz
+   mv cqlsh-astra ~/cqlsh-astra
+   export CQLSH_PATH=~/cqlsh-astra/
+   export PATH=${CQLSH_PATH}/bin:${PATH} >> ~/.bashrc
+   ```
+
+3. [Setup Datastax Astra DB](#DataStax-Astra)
+
+### DataStax Astra
+
+1. Create a [DataStax Astra account](https://dtsx.io/38HWu73) if you don't already have one:
+   ![image](img/01.png)
+
+2. On the home page. Locate the button **`Create Database`** both vector and non-vector support the Cassandra CQL
+   ![image](img/02.png)
+
+3. Populate the fields and click create database
+   ![image](img/03.png)
+
+4. After your database is provisioned, we need to generate an Application Token for our App. Go to the `Settings` tab in
+   the database home screen.
+   ![image](img/04.png)
+
+5. Generate a token by clicking `Generate Token` and give it a name.
+   ![image](img/05.png)
+6. After you have your Application Token, head to the database connect screen and select the driver connection that we
+   need. Go ahead and download the `Secure Bundle` for the driver.
+
+   The bundle might be downloaded as well using the astra-cli:
+   ```
+   astra db download-scb <db_name> -f secure-connect-db-name.zip
+   ```
+
+![image](img/06.png)
+
+[//]: # (## 🚀 Getting Started Paths:)
+
+[//]: # ()
+
+[//]: # (*Make sure you've completed the [prerequisites]&#40;#prerequisites&#41; before starting this step*)
+
+[//]: # ()
+
+[//]: # (- [Running on Gitpod]&#40;#running-on-gitpod&#41;)
+
+[//]: # ()
+
+[//]: # (### Running on Gitpod)
+
+### Local Setup
+
+1. Prepare Java and maven to be the Right Version
+   ```
+   sdk list java
+   sdk install java 17.0.12-amzn
+   sdk list maven
+   sdk install maven 3.9.85. 
+   ```
+2. Update the right config [properties files](src/main/resources/application.properties) with the Database credentials
+   ```
+   datastax.astra.username=token
+   datastax.astra.password=## FILL IN PASSWORD FROM Datastax's UI ##
+   datastax.astra.keyspace=<keyspace>
+   datastax.astra.secure-connect-bundle=<secure-bundle-file.zip>
+   ```
+3. Compile and Run
+   ```
+   mvn compile
+   mvn package
+   mvn spring-boot:run
+   ```   
+4. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API
+5. \[Optional] Connect to the DB from the command line
+
+```
+$CQLSH_PATH/bin/cqlsh \
+-u token \
+-p <password> \
+-b ./secure-connect-cass5-stac.zip
+```
