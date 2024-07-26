@@ -12,22 +12,9 @@ public class GeoJsonParser {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(GeoJsonParser.class);
 
-    public static ItemModelRequest parseGeoJsonContent(String geoJsonContent) throws IOException {
-        logger.debug("Parsing GeoJSON content.");
-        JsonNode rootNode = objectMapper.readTree(geoJsonContent);
-
-        // Extract properties from content
-        JsonNode contentNode = rootNode.get("content");
-        if (contentNode != null) {
-            JsonNode propertiesNode = contentNode.get("properties");
-            if (propertiesNode != null) {
-                ((ObjectNode) rootNode).set("properties", propertiesNode);
-            } else {
-                logger.warn("No 'properties' field found in 'content'.");
-            }
-        } else {
-            logger.warn("No 'content' field found in GeoJSON.");
-        }
+    public static ItemModelRequest parseGeoJson(String geoJson) throws IOException {
+        logger.debug("Parsing GeoJSON.");
+        JsonNode rootNode = objectMapper.readTree(geoJson);
 
         return objectMapper.treeToValue(rootNode, ItemModelRequest.class);
     }
