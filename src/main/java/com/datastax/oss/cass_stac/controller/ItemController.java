@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/item")
-@Tag(name="Item", description="The STAC Item to insert and get")
+@Tag(name = "Item", description = "The STAC Item to insert and get")
 @Schema(hidden = true)
 public class ItemController {
 
@@ -79,22 +79,4 @@ public class ItemController {
             return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-    @Operation(description="POST method to store Feature data as per new format")
-    @PostMapping("/item-collection")
-    public ResponseEntity<?> saveNewItem(@RequestBody final String json) {
-        final Map<String, String> message = new HashMap<>();
-        try {
-            logger.debug("Received JSON for saving new item: " + json);
-            message.put("message", "New Item Added Successfully");
-            itemService.saveNewGeoJson(json);
-            return new ResponseEntity<>(message, HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("Failed to save new item.", ex);
-            message.put("message", ex.getLocalizedMessage());
-            return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 }
-
-
