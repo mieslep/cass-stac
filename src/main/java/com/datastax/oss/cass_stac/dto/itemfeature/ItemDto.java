@@ -1,19 +1,18 @@
-package com.datastax.oss.cass_stac.dto;
-
-import lombok.Builder;
-import lombok.Data;
+package com.datastax.oss.cass_stac.dto.itemfeature;
 
 import java.util.List;
 import java.util.Map;
 
+import lombok.Builder;
+import lombok.Data;
+
 @Builder
 @Data
-public class FeatureDto {
+public class ItemDto {
 	private String type;
 	private String stac_version;
 	private List<String> stac_extensions;
 	private String id;
-	private String label;
 	private String partition_id;
 	private GeometryDto geometry;
 	private List<Float> bbox;

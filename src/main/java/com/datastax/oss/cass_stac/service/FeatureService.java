@@ -21,8 +21,7 @@ import org.springframework.stereotype.Service;
 
 import com.datastax.oss.cass_stac.dao.FeatureDao;
 import com.datastax.oss.cass_stac.dao.GeoTimePartition;
-import com.datastax.oss.cass_stac.dto.FeatureDto;
-import com.datastax.oss.cass_stac.dto.GeometryDto;
+import com.datastax.oss.cass_stac.dto.itemfeature.FeatureDto;
 import com.datastax.oss.cass_stac.util.GeometryUtil;
 import com.datastax.oss.driver.api.core.data.CqlVector;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,9 +97,20 @@ public class FeatureService {
                         CqlVector<Float> centroidVector = CqlVector.newInstance(Arrays.asList((float) centroid.getY(), (float) centroid.getX()));
 
                         OffsetDateTime datetime = (OffsetDateTime) (featureModel.getProperties().containsKey("datetime") ? featureModel.getProperties().get("datetime") : featureModel.getProperties().get("start_datetime"));
-                        String partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
                         String item_id = featureModel.getItem_id();
 
+                        String partitionId;
+//                        partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
+//                        final FeatureCollection featureCollection = featureCollectionDao.findById(item_id)
+//                                .orElseThrow(() -> new RuntimeException(item_id + " is not found"));
+
+                        try {
+                                final FeatureCollection featureCollection = featureCollectionDao.findById(item_id)
+                                        .orElseThrow(() -> new RuntimeException(item_id + " is not found"));
+                                        partitionId = featureCollection.getPartition_id();
+                        } catch (RuntimeException e){
+                                partitionId = partitioner.getGeoTimePartitionForPoint(centroid, datetime);
+                        }
                         final FeaturePrimaryKey pk = new FeaturePrimaryKey();
                         pk.setItem_id(item_id);
                         pk.setPartition_id(partitionId);

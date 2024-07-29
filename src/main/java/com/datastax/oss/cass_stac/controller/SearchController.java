@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datastax.oss.cass_stac.dao.ItemDao;
-import com.datastax.oss.cass_stac.dto.ItemDto;
+import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
 
 import lombok.RequiredArgsConstructor;
 

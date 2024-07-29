@@ -7,7 +7,7 @@ import com.datastax.oss.cass_stac.entity.ItemId;
 import com.datastax.oss.cass_stac.entity.ItemPrimaryKey;
 import com.datastax.oss.cass_stac.model.ItemModelRequest;
 import com.datastax.oss.cass_stac.model.ItemModelResponse;
-import com.datastax.oss.cass_stac.dto.ItemDto;
+import com.datastax.oss.cass_stac.dto.itemfeature.ItemDto;
 import com.datastax.oss.cass_stac.util.GeoJsonParser;
 import com.datastax.oss.cass_stac.util.GeoTimePartition;
 import com.datastax.oss.cass_stac.util.GeometryUtil;

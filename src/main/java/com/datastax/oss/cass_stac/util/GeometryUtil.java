@@ -11,7 +11,7 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKBReader;
 import org.locationtech.jts.io.WKBWriter;
 
-import com.datastax.oss.cass_stac.dto.GeometryDto;
+import com.datastax.oss.cass_stac.dto.itemfeature.GeometryDto;
 
 public class GeometryUtil {
     
