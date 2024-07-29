@@ -6,10 +6,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.datastax.oss.cass_stac.dto.CatalogDto;
-import com.datastax.oss.cass_stac.dto.LinkDto;
-
-
+import com.datastax.oss.cass_stac.dto.itemfeature.CatalogDto;
+import com.datastax.oss.cass_stac.dto.itemfeature.LinkDto;
 
 @Service
 public class IndexService {

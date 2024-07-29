@@ -1,11 +1,8 @@
 package com.datastax.oss.cass_stac.controller;
 
-import com.datastax.oss.cass_stac.dto.FeatureDto;
 import com.datastax.oss.cass_stac.model.FeatureModelResponse;
-import com.datastax.oss.cass_stac.model.ItemModelResponse;
 import com.datastax.oss.cass_stac.service.FeatureService;
 
-import com.datastax.oss.driver.api.core.data.CqlVector;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
