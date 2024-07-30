@@ -31,7 +31,7 @@ public class ItemController {
     private final ItemService itemService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Operation(description="POST method to store Feature data")
+    @Operation(description="POST method to store Item data")
     @PostMapping
     public ResponseEntity<?> saveItem(@RequestBody final String json) {
         final Map<String, String> message = new HashMap<>();
@@ -48,7 +48,7 @@ public class ItemController {
     }
 
     @Hidden
-    @Operation(description="POST method to store Feature data in batches")
+    @Operation(description="POST method to store Item data in batches")
     @PostMapping("/batch")
     public ResponseEntity<?> saveItems(@RequestBody final List<Map<String, Object>> items) {
         final Map<String, String> message = new HashMap<>();

@@ -23,22 +23,22 @@ public class CollectionService {
         this.objectMapper = objectMapper;
     }
 
-    public CollectionDto parseItemFromFile(String filePath) throws IOException {
+    public CollectionDto parseFeatureFromFile(String filePath) throws IOException {
         File jsonFile = new File(filePath);
-        return parseItemFromJsonFile(jsonFile);
+        return parseFeatureFromJsonFile(jsonFile);
     }
 
-    public CollectionDto parseItemFromJson(String json) throws IOException {
-        return parseItemFromJsonString(json);
+    public CollectionDto parseFeatureFromJson(String json) throws IOException {
+        return parseFeatureFromJsonString(json);
     }
 
-    private CollectionDto parseItemFromJsonFile(File jsonFile) throws IOException {
+    private CollectionDto parseFeatureFromJsonFile(File jsonFile) throws IOException {
         CollectionDto collection = objectMapper.readValue(jsonFile, CollectionDto.class);
         processCollection(collection);
         return collection;
     }
 
-    private CollectionDto parseItemFromJsonString(String json) throws IOException {
+    private CollectionDto parseFeatureFromJsonString(String json) throws IOException {
         CollectionDto collection = objectMapper.readValue(json, CollectionDto.class);
         processCollection(collection);
         return collection;

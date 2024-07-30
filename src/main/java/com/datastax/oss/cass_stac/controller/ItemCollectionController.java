@@ -29,7 +29,7 @@ public class ItemCollectionController {
     private final ItemService itemService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Operation(description="POST method to store Feature data as per new format")
+    @Operation(description="POST method to store Item data as per new format")
     @PostMapping
     public ResponseEntity<?> saveNewItem(@RequestBody final String json) {
         final Map<String, String> message = new HashMap<>();

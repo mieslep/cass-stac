@@ -23,9 +23,9 @@ public class FeatureCollectionController {
     private CollectionService collectionService;
 
     @PostMapping
-    public ResponseEntity<?> parseItem(@RequestBody final String json) {
+    public ResponseEntity<?> parseFeatures(@RequestBody final String json) {
         try {
-            CollectionDto collection = collectionService.parseItemFromJson(json);
+            CollectionDto collection = collectionService.parseFeatureFromJson(json);
             return new ResponseEntity<>(collection, HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(e.getLocalizedMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
