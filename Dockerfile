@@ -8,7 +8,7 @@ ENV SDKMAN_DIR="/root/.sdkman"
 ENV PATH="$SDKMAN_DIR/bin:$PATH"
 ENV TERM=xterm
 
-# Install necessary packages including build tools
+# Install necessary packages including build tools and jq
 RUN apt-get update && apt-get install -y \
     apt-utils \
     curl \
@@ -34,14 +34,16 @@ RUN apt-get update && apt-get install -y \
     tk-dev \
     libffi-dev \
     liblzma-dev \
+    jq \
     && apt-get clean
 
 # Install sdkman and Java using sdkman
 RUN curl -s "https://get.sdkman.io" | bash && \
     bash -c "source $SDKMAN_DIR/bin/sdkman-init.sh && sdk install java 17.0.4.1-tem"
 
-# Install Astra CLI
-RUN curl -Ls "https://dtsx.io/get-astra-cli" | bash || true
+# Manually download and set up Astra CLI (replace with correct URL)
+RUN curl -Ls "https://downloads.datastax.com/enterprise/astra-cli/latest/astra-cli-linux-amd64" -o /usr/local/bin/astra && \
+    chmod +x /usr/local/bin/astra
 
 # Install pyenv and set up Python environment
 RUN curl https://pyenv.run | bash
@@ -62,11 +64,26 @@ WORKDIR /app
 # Clone the project repository and checkout the specified branch
 RUN git clone -b feature/spring-restapi https://github.com/Anant/cass-stac.git /app
 
-# Make setup script executable if it exists
-RUN [ -f /app/setup.sh ] && chmod +x /app/setup.sh || echo "setup.sh not found"
+# Copy the local dockersetup.sh script to the container
+COPY dockersetup.sh /app/dockersetup.sh
 
-# Run the setup script and package the Maven project if the script exists
-RUN [ -f /app/setup.sh ] && /app/setup.sh || echo "setup.sh not found"
+# Make dockersetup.sh script executable
+RUN chmod +x /app/dockersetup.sh
+
+# Set environment variables using build arguments
+ARG ASTRA_DB_USERNAME
+ARG ASTRA_DB_KEYSPACE
+ARG ASTRA_DB_ID
+ARG DATASTAX_ASTRA_PASSWORD
+ENV ASTRA_DB_USERNAME=$ASTRA_DB_USERNAME
+ENV ASTRA_DB_KEYSPACE=$ASTRA_DB_KEYSPACE
+ENV ASTRA_DB_ID=$ASTRA_DB_ID
+ENV DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD
+
+# Run the dockersetup.sh script
+RUN /app/dockersetup.sh
+
+# Package the Maven project
 RUN mvn package -DskipTests=false
 
 # Run the Spring Boot application with server port overridden
