@@ -58,14 +58,12 @@ RUN curl -O https://downloads.datastax.com/enterprise/cqlsh-astra-20221114-bin.t
     tar xvfz cqlsh-astra-20221114-bin.tar.gz && \
     mv cqlsh-astra /usr/local/bin
 
+# Invalidate cache for Git repository download
+ADD https://api.github.com/repos/Anant/cass-stac/git/refs/heads/feature/spring-restapi version.json
+RUN rm -rf /app && mkdir -p /app && git clone -b feature/spring-restapi https://github.com/Anant/cass-stac.git /app
+
 # Create and set the working directory
 WORKDIR /app
-
-# Clone the project repository and checkout the specified branch
-RUN git clone -b feature/spring-restapi https://github.com/Anant/cass-stac.git /app
-
-# Copy the local dockersetup.sh script to the container
-COPY dockersetup.sh /app/dockersetup.sh
 
 # Make dockersetup.sh script executable
 RUN chmod +x /app/dockersetup.sh
