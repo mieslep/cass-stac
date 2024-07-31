@@ -75,10 +75,12 @@ ARG ASTRA_DB_USERNAME
 ARG ASTRA_DB_KEYSPACE
 ARG ASTRA_DB_ID
 ARG DATASTAX_ASTRA_PASSWORD
+ARG DATASTAX_ASTRA_SCB_NAME=secure-connect-database.zip
 ENV ASTRA_DB_USERNAME=$ASTRA_DB_USERNAME
 ENV ASTRA_DB_KEYSPACE=$ASTRA_DB_KEYSPACE
 ENV ASTRA_DB_ID=$ASTRA_DB_ID
 ENV DATASTAX_ASTRA_PASSWORD=$DATASTAX_ASTRA_PASSWORD
+ENV DATASTAX_ASTRA_SCB_NAME=$DATASTAX_ASTRA_SCB_NAME
 
 # Run the dockersetup.sh script
 RUN /app/dockersetup.sh
@@ -87,5 +89,5 @@ RUN /app/dockersetup.sh
 RUN mvn package -DskipTests=false
 
 # Run the Spring Boot application with server port overridden
-CMD ["sh", "-c", "mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=${SERVER_PORT}"]
+CMD ["sh", "-c", "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=${SERVER_PORT} --datastax.astra.secure-connect-bundle=${DATASTAX_ASTRA_SCB_NAME} \""]
 

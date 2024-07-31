@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Debugging: Print environment variables
+echo "ASTRA_DB_USERNAME=${ASTRA_DB_USERNAME}"
+echo "ASTRA_DB_KEYSPACE=${ASTRA_DB_KEYSPACE}"
+echo "ASTRA_DB_ID=${ASTRA_DB_ID}"
+echo "DATASTAX_ASTRA_PASSWORD=${DATASTAX_ASTRA_PASSWORD}"
+echo "DATASTAX_ASTRA_SCB_NAME=${DATASTAX_ASTRA_SCB_NAME}"
+
 # Check if environment variables are set
 if [ -z "$ASTRA_DB_USERNAME" ]; then
   echo "Error: ASTRA_DB_USERNAME is not set."
@@ -21,12 +28,16 @@ if [ -z "$DATASTAX_ASTRA_PASSWORD" ]; then
   exit 1
 fi
 
-# Send POST request to obtain the download link for SCB
-RESPONSE=$(curl -s --location --request POST https://api.astra.datastax.com/v2/databases/$ASTRA_DB_ID/secureBundleURL \
-    --header "Content-Type: application/json" \
-    --header "Authorization: Bearer $DATASTAX_ASTRA_PASSWORD")
+if [ -z "$DATASTAX_ASTRA_SCB_NAME" ]; then
+  echo "DATASTAX_ASTRA_SCB_NAME is not set, using default value"
+  DATASTAX_ASTRA_SCB_NAME="secure-connect-database.zip"
+fi
 
-echo $RESPONSE
+# Send POST request to obtain the download link for SCB
+RESPONSE=$(curl -s -X POST https://api.astra.datastax.com/v2/databases/$ASTRA_DB_ID/secureBundleURL \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $DATASTAX_ASTRA_PASSWORD")
+
 # Extract download URL from response
 DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.downloadURL')
 
@@ -37,17 +48,13 @@ if [ "$DOWNLOAD_URL" == "null" ]; then
 fi
 
 # Download Secure Connect Bundle (SCB) using the obtained URL
-SCB_DEST="/app/src/main/resources/secure-connect-database.zip"
+SCB_DEST="/app/src/main/resources/${DATASTAX_ASTRA_SCB_NAME}"
 curl -L -o $SCB_DEST $DOWNLOAD_URL
-
-SCB_RN="/app/src/main/resources/secure-connect-cass5-stac.zip"
 
 if [ $? -ne 0 ]; then
   echo "Error downloading SCB."
   exit 1
 fi
 
-mv $SCB_DEST $SCB_RN
-
-echo "SCB downloaded and saved to $SCB_RN"
+echo "SCB downloaded and saved to $SCB_DEST"
 
