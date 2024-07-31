@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+# pip install futures if you are on Python 2.7
 
 # Define the API endpoint and headers
 url = 'http://localhost:8080/item/batch'
