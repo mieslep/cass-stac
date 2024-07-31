@@ -2,6 +2,7 @@ import requests
 import json
 import os
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Define the API endpoint and headers
 url = 'http://localhost:8080/item/batch'
@@ -25,6 +26,9 @@ log_file_path = 'process.log'
 # Batch size
 batch_size = 100
 
+# Number of threads
+num_threads = 10
+
 def log(message):
     with open(log_file_path, 'a') as log_file:
         log_file.write(f"{datetime.now()} - {message}\n")
@@ -43,53 +47,60 @@ def log_failed_id(line, reason):
     with open(failed_ids_file_path, 'a') as failed_ids_file:
         failed_ids_file.write(f"{datetime.now()} - {line} - Reason: {reason}\n")
 
+def send_batch(batch, batch_number):
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(batch))
+        if response.status_code == 200:
+            log(f'Successfully uploaded batch {batch_number} of size {len(batch)}')
+            return True
+        else:
+            log(f'Failed to upload batch {batch_number}, Status code: {response.status_code}, Response: {response.text}')
+            for item in batch:
+                log_failed_id(json.dumps(item), f"Status code: {response.status_code}, Response: {response.text}")
+            return False
+    except Exception as e:
+        log(f'Error uploading batch {batch_number}: {str(e)}')
+        for item in batch:
+            log_failed_id(json.dumps(item), str(e))
+        return False
+
 # Read the file and send data in batches
 batch = []
 line_number = 0
+batch_number = 0
 
 try:
     log("Process started")
     line_number = load_progress()
     with open(file_path, 'r') as file:
-        for current_line_number, line in enumerate(file):
-            if current_line_number < line_number:
-                continue
-            line = line.strip()
-            if line:
-                batch.append(json.loads(line))
-                if len(batch) >= batch_size:
-                    try:
-                        response = requests.post(url, headers=headers, data=json.dumps(batch))
-                        if response.status_code == 200:
-                            log(f'Successfully uploaded batch of size {len(batch)}')
-                            save_progress(current_line_number + 1)
-                        else:
-                            log(f'Failed to upload batch, Status code: {response.status_code}, Response: {response.text}')
-                            for item in batch:
-                                log_failed_id(json.dumps(item), f"Status code: {response.status_code}, Response: {response.text}")
-                    except Exception as e:
-                        log(f'Error uploading batch: {str(e)}')
-                        for item in batch:
-                            log_failed_id(json.dumps(item), str(e))
-                    batch = []
-        
-        # Send the remaining items in the last batch
-        if batch:
-            try:
-                response = requests.post(url, headers=headers, data=json.dumps(batch))
-                if response.status_code == 200:
-                    log(f'Successfully uploaded final batch of size {len(batch)}')
-                    save_progress(current_line_number + 1)
-                else:
-                    log(f'Failed to upload final batch, Status code: {response.status_code}, Response: {response.text}')
-                    for item in batch:
-                        log_failed_id(json.dumps(item), f"Status code: {response.status_code}, Response: {response.text}")
-            except Exception as e:
-                log(f'Error uploading final batch: {str(e)}')
-                for item in batch:
-                    log_failed_id(json.dumps(item), str(e))
+        lines = file.readlines()
+        total_lines = len(lines)
+        futures = []
+
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            for current_line_number, line in enumerate(lines):
+                if current_line_number < line_number:
+                    continue
+                line = line.strip()
+                if line:
+                    batch.append(json.loads(line))
+                    if len(batch) >= batch_size:
+                        batch_number += 1
+                        futures.append(executor.submit(send_batch, batch, batch_number))
+                        batch = []
+                        save_progress(current_line_number + 1)
+
+            # Send the remaining items in the last batch
+            if batch:
+                batch_number += 1
+                futures.append(executor.submit(send_batch, batch, batch_number))
+                save_progress(total_lines)
+
+            # Wait for all threads to complete
+            for future in as_completed(futures):
+                future.result()  # Check for exceptions raised by threads
+
 except Exception as e:
     log(f'Error processing file: {str(e)}')
 finally:
     log("Process ended")
-
