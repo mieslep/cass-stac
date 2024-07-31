@@ -105,7 +105,7 @@ here: [https://github.com/Anant/cass-stac](#prerequisites)
 3. Compile and Run
    ```
    mvn compile
-   mvn package
+   mvn package -DskipTests=true
    mvn spring-boot:run
    ```   
 4. Hit http://localhost:8080/swagger-ui/index.html#/ and start using the API
